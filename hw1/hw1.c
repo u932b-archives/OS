@@ -24,30 +24,65 @@ int main(int argc, char *argv[])
     char *mode = "r";
     char output_file[] = "out.list";
     char c;
-    int new_line = 0;
-    int new_module = 0;
-    typedef enum {def_list, use_list, prog_txt} stage;
+    typedef enum {def_list, use_list, prog_txt} section;
+    int new_section = 0;
 
     ifp = fopen(input_file, mode);
-    if (ifp) {
-        stage pass1_stage = def_list;
+    if (ifp)
+    {
+        section pass1_section = def_list;
+        int section_counter = 0;
+        char* tmp_arr;
+        int combo = 0;
+        tmp_arr = malloc((combo+1)*sizeof(c));
         while ((c = getc(ifp)) != EOF)
-            if (new_line == 1)
+        {
+            if (new_section == 1)
             {
+                // If the section_counter is 0, it means we are going into a new
+                // module
                 if (c == 0)
                 {
-                    new_module == 1;
+                    pass1_section = def_list;
+                    new_section = 0;
                 }
+                else
+                {
+                    section_counter = (int)c;
+                }
+                continue;
             }
-            if (c == '\t' || c == '\n')
+            if (c != '\t' && c != '\n' && c != ' ')
             {
-                // new stage
-                new_line = 1;
+                switch (pass1_section)
+                {
+                    case def_list:
+                        combo++;
+                         printf ("c is now: %c\n", c);
+                        tmp_arr = realloc(tmp_arr, (combo+1)*sizeof(c));
+                        tmp_arr[combo-1] = c;
+                        tmp_arr[combo] = '\0';
+                        printf ("building up the tmp_arr: %s, combo is "
+                                "currently: %d\n", tmp_arr, combo);
+                        // putchar(c);
+                    case use_list:
+                        pass;
+                    case prog_txt:
+                        pass;
+                    default:
+                        pass;
+                }
             }
             else
             {
-            putchar(c);
+                combo = 0;
+                printf ("WTF\n");
+                printf ("stuff in the tmp_arr: %s\n", tmp_arr);
+                free(tmp_arr);
+                tmp_arr = malloc((combo+1)*sizeof(c));
+                tmp_arr[1] = '\0';
             }
+        }
         fclose(ifp);
     }
     else
