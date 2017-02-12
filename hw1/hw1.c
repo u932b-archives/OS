@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
         char* tmp_arr;
         int combo = 0;
         tmp_arr = malloc((combo+1)*sizeof(c));
+        tmp_arr[combo] = '\0';
         while ((c = getc(ifp)) != EOF)
         {
             if (c != '\t' && c != '\n' && c != ' ')
@@ -109,13 +110,12 @@ int main(int argc, char *argv[])
                 {
                     int sum = 0;
                     int i;
-                    /*
-                    for (i = 0; i < combo+1; ++i) {
-                        sum |= tmp_arr[i];
-                    }
-                    if (sum == 0)
+
+                    // Case when input file start with delimiter
+                    if (tmp_arr[0] == '\0')
                     {
-                    */
+                        continue;
+                    }
 
                     sscanf(tmp_arr, "%d", &section_counter);
                     if (section_counter == 0)
