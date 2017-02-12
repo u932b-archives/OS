@@ -39,82 +39,109 @@ int main(int argc, char *argv[])
         tmp_arr = malloc((combo+1)*sizeof(c));
         while ((c = getc(ifp)) != EOF)
         {
-            if (new_section == 1 && c != '\t' && c != '\n' && c != ' ')
+            if (c != '\t' && c != '\n' && c != ' ')
             {
-                printf ("We are at section: %d\n", (int)pass1_section);
-                // printf("c is now: %c\n", c);
-                if (c == '0')
+                fookin_delim = 0;
+                if (new_section == 1)
                 {
-                    printf ("Hitting zero\n");
-                    pass1_section++;
-                    pass1_section = pass1_section % 3;
-                    section_counter = 0;
-                    // printf ("We are at section: %d\n", (int)pass1_section);
+                    // This would print as many times as the number of char
+                    // in the section_counter
+                    printf ("We are at section: %d\n", (int)pass1_section);
+                    combo++;
+                    tmp_arr = realloc(tmp_arr, (combo+1)*sizeof(c));
+                    tmp_arr[combo-1] = c;
+                    tmp_arr[combo] = '\0';
                 }
                 else
                 {
-                    section_counter = (int)c - '0';
-                    new_section = 0;
-                }
-                // expected delimiter after count declaring
-                fookin_delim = 1;
-                continue;
-            }
-            if (c != '\t' && c != '\n' && c != ' ')
-            {
-                // printf ("section_counter is: %d\n", section_counter);
-
-                fookin_delim = 0;
-
-                switch (pass1_section)
-                {
-                    case def_list:
-                        if (section_counter > 0 && symbol_count == -1 )
-                        {
-                            // I have to deal with this many symbols before next
-                            // section
-                            symbol_count = section_counter*2;
-                        }
-                        combo++;
-                        tmp_arr = realloc(tmp_arr, (combo+1)*sizeof(c));
-                        tmp_arr[combo-1] = c;
-                        tmp_arr[combo] = '\0';
-                        // printf ("building up the tmp_arr: %s, combo is "
-                        //         "currently: %d\n", tmp_arr, combo);
-                        break;
-                    case use_list:
-                        if (section_counter > 0 && symbol_count == -1 )
-                        {
-                            symbol_count = section_counter;
-                        }
-                        combo++;
-                        tmp_arr = realloc(tmp_arr, (combo+1)*sizeof(c));
-                        tmp_arr[combo-1] = c;
-                        tmp_arr[combo] = '\0';
-                        // printf ("building up the tmp_arr: %s, combo is "
-                        //         "currently: %d\n", tmp_arr, combo);
-                        break;
-                    case prog_txt:
-                        if (section_counter > 0 && symbol_count == -1 )
-                        {
-                            symbol_count = section_counter * 2;
-                        }
-                        combo++;
-                        tmp_arr = realloc(tmp_arr, (combo+1)*sizeof(c));
-                        tmp_arr[combo-1] = c;
-                        tmp_arr[combo] = '\0';
-                        // printf ("building up the tmp_arr: %s, combo is "
-                        //         "currently: %d\n", tmp_arr, combo);
-                        break;
-                    default:
-                        pass;
+                    switch (pass1_section)
+                    {
+                        case def_list:
+                            if (section_counter > 0 && symbol_count == -1 )
+                            {
+                                // This many symbols before next section
+                                symbol_count = section_counter*2;
+                            }
+                            combo++;
+                            tmp_arr = realloc(tmp_arr, (combo+1)*sizeof(c));
+                            tmp_arr[combo-1] = c;
+                            tmp_arr[combo] = '\0';
+                            // printf ("building up the tmp_arr: %s, combo is "
+                            //         "currently: %d\n", tmp_arr, combo);
+                            break;
+                        case use_list:
+                            if (section_counter > 0 && symbol_count == -1 )
+                            {
+                                symbol_count = section_counter;
+                            }
+                            combo++;
+                            tmp_arr = realloc(tmp_arr, (combo+1)*sizeof(c));
+                            tmp_arr[combo-1] = c;
+                            tmp_arr[combo] = '\0';
+                            // printf ("building up the tmp_arr: %s, combo is "
+                            //         "currently: %d\n", tmp_arr, combo);
+                            break;
+                        case prog_txt:
+                            if (section_counter > 0 && symbol_count == -1 )
+                            {
+                                symbol_count = section_counter * 2;
+                            }
+                            combo++;
+                            tmp_arr = realloc(tmp_arr, (combo+1)*sizeof(c));
+                            tmp_arr[combo-1] = c;
+                            tmp_arr[combo] = '\0';
+                            // printf ("building up the tmp_arr: %s, combo is "
+                            //         "currently: %d\n", tmp_arr, combo);
+                            break;
+                        default:
+                            pass;
+                    }
                 }
             }
             else
             // We hit an delimiter, time to flush tmp_arr
             {
+                if (fookin_delim == 1 )
+                {
+                    continue;
+                }
+                if (new_section == 1)
+                {
+                    int sum = 0;
+                    int i;
+                    /*
+                    for (i = 0; i < combo+1; ++i) {
+                        sum |= tmp_arr[i];
+                    }
+                    if (sum == 0)
+                    {
+                    */
+
+                    sscanf(tmp_arr, "%d", &section_counter);
+                    if (section_counter == 0)
+                    {
+                        printf ("Hitting zero\n");
+                        pass1_section++;
+                        pass1_section = pass1_section % 3;
+                        section_counter = 0;
+                        // printf ("We are at section: %d\n", (int)pass1_section);
+                    }
+                    else
+                    {
+                        // section_counter = (int)sum - '0';
+                        // printf ("section_counter is: %d\n", section_counter);
+                        new_section = 0;
+                    }
+                    combo = 0;
+                    free(tmp_arr);
+                    tmp_arr = malloc((combo+1)*sizeof(c));
+                    tmp_arr[1] = '\0';
+                    fookin_delim = 1;
+                    continue;
+                }
                 if (fookin_delim == 0)
                 {
+                    // flush
                     combo = 0;
                     printf ("%s\n", tmp_arr);
                     free(tmp_arr);
@@ -129,7 +156,7 @@ int main(int argc, char *argv[])
                             symbol_count = -1;
                             pass1_section++;
                             pass1_section = pass1_section % 3;
-                            *(&new_section) = 1;
+                            new_section = 1;
                         }
                     }
                 }
