@@ -1,8 +1,21 @@
 # include <stdio.h>
 # include <string.h>
 # include <stdlib.h>
+# include <ctype.h>
 
 #define pass (void)0
+
+void check_arr_size(int combo, int max_arr_size)
+{
+    if (combo <= max_arr_size)
+    {
+        return;
+    }
+    else
+    {
+        printf ("Error: maximum arr size reached\n");
+    }
+}
 
 int main(int argc, char *argv[])
 {
@@ -25,24 +38,33 @@ int main(int argc, char *argv[])
     char output_file[] = "out.list";
     char c;
     typedef enum {def_list, use_list, prog_txt} section;
+    int max_arr_size = 17;
 
     ifp = fopen(input_file, mode);
     if (ifp)
     {
         int new_section = 1;
         int fookin_delim = 0;
+        int expect_symbol = 0;
+        int module_start = 1;
+
         section pass1_section = def_list;
+
         int section_counter = 0;
         int symbol_count = -1;
+
         char* tmp_arr;
         int combo = 0;
         tmp_arr = malloc((combo+1)*sizeof(c));
         tmp_arr[combo] = '\0';
+
         while ((c = getc(ifp)) != EOF)
         {
             if (c != '\t' && c != '\n' && c != ' ')
             {
                 fookin_delim = 0;
+                expect_symbol = 0;
+
                 if (new_section == 1)
                 {
                     // This would print as many times as the number of char
@@ -58,12 +80,23 @@ int main(int argc, char *argv[])
                     switch (pass1_section)
                     {
                         case def_list:
+                            // printf ("current c: %c\n", c);
+                            // printf ("section_counter is: %d\n"
+                            // , section_counter);
+                            module_start = 1;
                             if (section_counter > 0 && symbol_count == -1 )
                             {
                                 // This many symbols before next section
                                 symbol_count = section_counter*2;
                             }
+                            printf ("symbol_count is: %d\n", symbol_count);
+                            if (symbol_count % 2 == 1 && !isdigit(c))
+                            {
+                                printf ("Error: Should be a digit instead:"
+                                        "%c\n", c);
+                            }
                             combo++;
+                            check_arr_size(combo, max_arr_size);
                             tmp_arr = realloc(tmp_arr, (combo+1)*sizeof(c));
                             tmp_arr[combo-1] = c;
                             tmp_arr[combo] = '\0';
@@ -71,11 +104,15 @@ int main(int argc, char *argv[])
                             //         "currently: %d\n", tmp_arr, combo);
                             break;
                         case use_list:
+                            // printf ("current c: %c\n", c);
+                            // printf ("section_counter is: %d\n", section_counter);
+                            // printf ("symbol_count is: %d\n", symbol_count);
                             if (section_counter > 0 && symbol_count == -1 )
                             {
                                 symbol_count = section_counter;
                             }
                             combo++;
+                            check_arr_size(combo, max_arr_size);
                             tmp_arr = realloc(tmp_arr, (combo+1)*sizeof(c));
                             tmp_arr[combo-1] = c;
                             tmp_arr[combo] = '\0';
@@ -87,7 +124,9 @@ int main(int argc, char *argv[])
                             {
                                 symbol_count = section_counter * 2;
                             }
+                            // printf ("symbol_count is: %d\n", symbol_count);
                             combo++;
+                            check_arr_size(combo, max_arr_size);
                             tmp_arr = realloc(tmp_arr, (combo+1)*sizeof(c));
                             tmp_arr[combo-1] = c;
                             tmp_arr[combo] = '\0';
@@ -157,12 +196,27 @@ int main(int argc, char *argv[])
                             pass1_section++;
                             pass1_section = pass1_section % 3;
                             new_section = 1;
+                            module_start = 0;
                         }
+                    }
+                    else
+                    {
+                        expect_symbol = 1;
                     }
                 }
                 fookin_delim = 1;
                 // continue;
             }
+        }
+        if (module_start != 0 || pass1_section != 0)
+        {
+            printf ("Error: File ended before finishing a module\n");
+        }
+        if (symbol_count != -1 || expect_symbol == 1)
+        {
+            // TODO
+            // Find where the fuck the wrong is.
+            printf ("Input finished before sufficient symbols!\n");
         }
         fclose(ifp);
     }
