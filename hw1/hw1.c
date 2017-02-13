@@ -47,7 +47,8 @@ int main(int argc, char *argv[])
     } a_symbol;
     int t_size = 0;
 
-    a_symbol* symbol_table = (a_symbol*) malloc(sizeof(a_symbol) * t_size);
+    // a_symbol* symbol_table = (a_symbol*) malloc(sizeof(a_symbol) * t_size);
+    a_symbol* symbol_table = (a_symbol*) malloc(sizeof(a_symbol) * 1);
 
     // a_symbol.key = 1;
     // a_symbol.value = "foo";
@@ -135,7 +136,6 @@ int main(int argc, char *argv[])
                             tmp_arr[combo] = '\0';
                             // printf ("building up the tmp_arr: %s, combo is "
                             //         "currently: %d\n", tmp_arr, combo);
-                            printf ("use_list to symbol_table3: %s\n", symbol_table[0].key);
                             break;
                         case prog_txt:
                             if (section_counter > 0 && symbol_count == -1 )
@@ -207,32 +207,33 @@ int main(int argc, char *argv[])
                             t_size++;
                             symbol_table = (a_symbol*) realloc(symbol_table,
                                 t_size*sizeof(a_symbol));
-                            // symbol_table[t_size-1].key = malloc(sizeof(tmp_arr));
-                            printf ("t_size: %d\n", t_size);
-                            // symbol_table[t_size-1].key = tmp_arr;
-                            symbol_table[0].key = tmp_arr;
+                            symbol_table[t_size-1].key = malloc(sizeof(tmp_arr));
+                            strncpy(symbol_table[t_size-1].key, tmp_arr,
+                                    sizeof(tmp_arr));
+                            // *symbol_table[t_size-1].key = tmp_arr;
+                            printf ("written key to symbol_table: %s\n",
+                                    symbol_table[t_size-1].key);
+                            // symbol_table[0].key = tmp_arr;
                             // printf ("%s\n", tmp_arr);
-                            printf ("write key to symbol_table2: %s\n", symbol_table[t_size-1].key);
-                            printf ("write key to symbol_table3: %s\n", symbol_table[0].key);
                         }
                         else if (symbol_count % 2 == 1)
                         {
                             // somehow sscanf not working
                             // int i;
                             // printf ("sscanf: %d\n", sscanf(tmp_arr, "%d",&i));
-                            printf (" yo keypair in symbol_table1: %s\n",
-                            symbol_table[0].key);
                             symbol_table[t_size-1].value = base_address +
                                 atoi(tmp_arr);
                             printf ("write val to symbol_table: %s\n", tmp_arr);
-                            printf ("keypair in symbol_table1: %d\n",
-                            symbol_table[0].value);
+                            printf ("key in symbol_table1: %s\n",
+                            symbol_table[t_size-1].key);
+                            printf ("t_size: %d\n", t_size);
+                            printf ("value in symbol_table: %d\n",
+                            symbol_table[t_size-1].value);
                         }
                     }
 
                     // flush
                     combo = 0;
-                    // printf ("%s\n", tmp_arr);
                     free(tmp_arr);
                     tmp_arr = malloc((combo+1)*sizeof(c));
                     tmp_arr[1] = '\0';
@@ -269,6 +270,7 @@ int main(int argc, char *argv[])
             // Find where the fuck the wrong is.
             printf ("Input finished before sufficient symbols!\n");
         }
+        // free(symbol_table);
         fclose(ifp);
     }
     else
@@ -277,12 +279,22 @@ int main(int argc, char *argv[])
         exit (1);
     }
 
+    printf ("Symbol Table\n");
     int i;
     for (i = 0; i < t_size; i++)
     {
-        printf ("keypair in symbol_table: %s, %d\n",
+        printf ("%s=%d\n",
         symbol_table[i].key, symbol_table[i].value);
+        free(symbol_table[i].key);
     }
+    free(symbol_table);
+
+
+
+
+
+
+
     ofp = fopen (output_file, "w");
     if (ofp == NULL)
     {
