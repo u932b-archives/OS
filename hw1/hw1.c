@@ -176,9 +176,6 @@ int main(int argc, char *argv[])
                 }
                 if (new_section == 1)
                 {
-                    int sum = 0;
-                    int i;
-
                     // Case when input file start with delimiter
                     if (tmp_arr[0] == '\0')
                     {
@@ -317,6 +314,8 @@ int main(int argc, char *argv[])
         int section_counter = 0;
         int symbol_count = -1;
         int base_address = 0;
+        int prev_section_counter = 0;
+        int addr_counter = 0;
 
         // tmp array
         char* tmp_arr;
@@ -332,7 +331,7 @@ int main(int argc, char *argv[])
         // tmp storage
         char tmp_prog_txt = 'N';
 
-        printf ("pass2, motherfucker\n");
+        printf ("\nMemory Map\n");
         while ((c = getc(ifp)) != EOF)
         {
             //printf ("%c", c);
@@ -399,7 +398,8 @@ int main(int argc, char *argv[])
                             if (section_counter > 0 && symbol_count == -1 )
                             {
                                 symbol_count = section_counter * 2;
-                                base_address += section_counter;
+                                base_address += prev_section_counter;
+                                prev_section_counter = section_counter;
                             }
                             // printf ("symbol_count is: %d\n", symbol_count);
                             combo++;
@@ -468,7 +468,6 @@ int main(int argc, char *argv[])
                     }
                     if (pass1_section == prog_txt)
                     {
-                        printf ("%s ", tmp_arr);
                         if (symbol_count % 2 == 0)
                         {
                             if (tmp_arr[0] == 'E')
@@ -485,14 +484,16 @@ int main(int argc, char *argv[])
 							{
 								tmp_prog_txt = 'N';
 							}
+                            printf ("%03d: ", addr_counter);
+                            addr_counter++;
                         }
                         else
                         {
                             if (tmp_prog_txt == 'E')
                             {
-                                printf ("Used to be: %s\n", tmp_arr);
-                                printf ("To add: %s\n",
-                                        le_use_list[atoi(tmp_arr)%1000]);
+                                // printf ("Used to be: %s\n", tmp_arr);
+                                // printf ("To add: %s\n",
+                                //         le_use_list[atoi(tmp_arr)%1000]);
                                 int i;
                                 int to_add;
                                 for (i = 0; i < t_size; i++)
@@ -502,21 +503,25 @@ int main(int argc, char *argv[])
                                     // if (le_use_list[atoi(tmp_arr)%1000] ==
                                     //         symbol_table[i].key)
                                     {
-                                        printf ("key to print:%s\n",
-                                                symbol_table[i].key);
-                                        printf ("val to print:%d\n",
-                                                symbol_table[i].value);
+                                        // printf ("key to print:%s\n",
+                                        //         symbol_table[i].key);
+                                        // printf ("val to print:%d\n",
+                                        //         symbol_table[i].value);
 
                                         to_add = symbol_table[i].value;
                                     }
                                 }
-                                printf ("Now: %d\n", (atoi(tmp_arr)/1000)*1000 +
+                                printf ("%d\n", (atoi(tmp_arr)/1000)*1000 +
                                         to_add);
 
                             }
                             else if (tmp_prog_txt == 'R')
                             {
-
+                                printf ("%d\n", atoi(tmp_arr) + base_address);
+                            }
+                            else
+                            {
+                                printf ("%s\n", tmp_arr);
                             }
                         }
                     }
@@ -531,7 +536,8 @@ int main(int argc, char *argv[])
                         symbol_count--;
                         if (symbol_count == 0)
                         {
-                            // printf ("moving on to the next section.\n");
+                            printf ("moving on to the next section.\n");
+                            printf ("%c\n", c);
                             symbol_count = -1;
                             pass1_section++;
                             pass1_section = pass1_section % 3;
