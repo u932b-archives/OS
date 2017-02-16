@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
         std:vector<string> le_use_list;
 
         // tmp storage
-        char tmp_prog_txt = 'N';
+        char tmp_prog_txt;
 
         printf ("\nMemory Map\n");
         // printf ("use count: %d\n", use_count);
@@ -436,37 +436,69 @@ int main(int argc, char *argv[])
                             {
                                 tmp_prog_txt = 'R';
                             }
-							else
+							else if (tmp_arr[0] == 'A')
 							{
-								tmp_prog_txt = 'N';
+								tmp_prog_txt = 'A';
 							}
+                            else if (tmp_arr[0] == 'I')
+                            {
+                                tmp_prog_txt = 'I';
+                            }
+                            else
+                            {
+                                // TODO
+                            }
                             printf ("%03d: ", addr_counter);
                             addr_counter++;
                         }
                         else
                         {
+                            int result;
                             if (tmp_prog_txt == 'E')
                             {
 								string use_target = le_use_list[stoi(tmp_arr)%1000];
-                                int i;
                                 int to_add;
 								if ( symbol_table.find(use_target
 								) != symbol_table.end() )
 								{
                                 	to_add = symbol_table[use_target].value;
                                     symbol_table[use_target].is_used = true;
+                                    result = (stoi(tmp_arr)/1000)*1000 + to_add;
+                                    printf ("%d\n", result);
                                 }
-                                printf ("%d\n", (stoi(tmp_arr)/1000)*1000 +
-                                        to_add);
-
+                                else
+                                {
+                                    //TODO
+                                }
                             }
                             else if (tmp_prog_txt == 'R')
                             {
-                                printf ("%d\n", stoi(tmp_arr) + base_address);
+                                result = stoi(tmp_arr) + base_address;
+                                printf ("%d\n", result);
+                            }
+                            else if (tmp_prog_txt == 'I')
+                            {
+                                result = stoi(tmp_arr);
+                                printf ("%d\n", result);
+                            }
+                            else if (tmp_prog_txt == 'A')
+                            {
+                                result = stoi(tmp_arr);
+                                // cout << "result:" << result << endl;
+                                if ((result % 1000) > machine_size)
+                                {
+                                    printf ("%d ", (result/1000)*1000);
+                                    cout << "Error: Absolute address exceeds"
+                                        " machine size; zero used\n";
+                                }
+                                else
+                                {
+                                    printf ("%d\n", result);
+                                }
                             }
                             else
                             {
-                                printf ("%s\n", tmp_arr.c_str());
+                                //TODO
                             }
                         }
                     }
