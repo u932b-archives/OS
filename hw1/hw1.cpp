@@ -469,7 +469,7 @@ int main(int argc, char *argv[])
                                 else
                                 {
                                     cout << (stoi(tmp_arr)/1000)*1000 <<
-                                        " Error:" << use_target <<
+                                        " Error: " << use_target <<
                                         " is not defined; zero used\n";
                                 }
                             }
@@ -548,6 +548,7 @@ int main(int argc, char *argv[])
         fclose(ifp);
 
         // Warning output
+        cout << endl;
 	    for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
      	iter != symbol_table.end();
      	++iter )
