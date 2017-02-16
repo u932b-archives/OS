@@ -30,19 +30,27 @@ class ObjFactory
 class Symbol {
   public:
     int value;
-    bool has_duplicate;
-    void set_values (bool, int);
+    void set_values (int);
 };
 
-void Symbol::set_values (bool x, int y) {
-  has_duplicate = x;
+void Symbol::set_values (int y) {
   value = y;
 }
 
 class Def_Symbol : public Symbol{
-    bool has_duplicate;
     public:
+    int defined_module;
+    bool has_duplicate;
+    bool is_used;
+    void set_values (int, bool, bool, int);
 };
+
+void Def_Symbol::set_values (int val, bool dup, bool used, int module) {
+  has_duplicate = dup;
+  value = val;
+  is_used = used;
+  defined_module = module;
+}
 
 int main(int argc, char *argv[])
 {
@@ -65,7 +73,7 @@ int main(int argc, char *argv[])
     char c;
     int cur_section = 0;
 
-    map<string, Symbol> symbol_table;
+    map<string, Def_Symbol> symbol_table;
 
     ifp = fopen(input_file, "r");
     if (ifp)
@@ -82,6 +90,7 @@ int main(int argc, char *argv[])
         int section_counter = 0;
         int symbol_count = -1;
         int base_address = 0;
+        int cur_module = 1;
 
         string tmp_arr;
 
@@ -199,10 +208,11 @@ int main(int argc, char *argv[])
                         {
                             if (symbol_table.find(map_key) == symbol_table.end())
                             {
-                                Symbol a_symbol;
+                                Def_Symbol a_def_symbol;
                                 int symbol_addr = base_address + stoi(tmp_arr);
-                                a_symbol.set_values(false, symbol_addr);
-                                symbol_table[map_key] = a_symbol;
+                                a_def_symbol.set_values(symbol_addr, false,
+                                        false, cur_module);
+                                symbol_table[map_key] = a_def_symbol;
                             }
                             else
                             {
@@ -225,6 +235,10 @@ int main(int argc, char *argv[])
                             cur_section = cur_section % 3;
                             new_section = 1;
                             module_start = 0;
+                            if (cur_section == 0)
+                            {
+                                cur_module++;
+                            }
                         }
                     }
                     else
@@ -256,7 +270,7 @@ int main(int argc, char *argv[])
 
 
     printf ("Symbol Table\n");
-	for( std::map<string, Symbol>::iterator iter = symbol_table.begin();
+	for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
      	iter != symbol_table.end();
      	++iter )
 	{
@@ -440,6 +454,7 @@ int main(int argc, char *argv[])
 								) != symbol_table.end() )
 								{
                                 	to_add = symbol_table[use_target].value;
+                                    symbol_table[use_target].is_used = true;
                                 }
                                 printf ("%d\n", (stoi(tmp_arr)/1000)*1000 +
                                         to_add);
@@ -497,6 +512,18 @@ int main(int argc, char *argv[])
             printf ("Input finished before sufficient symbols!\n");
         }
         fclose(ifp);
+
+        // Warning output
+	    for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
+     	iter != symbol_table.end();
+     	++iter )
+        {
+            if (iter->second.is_used == false)
+            {
+                cout << "Warning: Module " << iter->second.defined_module <<
+                    ": "<< iter->first <<" was defined but never used\n";
+            }
+        }
     }
     else
     {
