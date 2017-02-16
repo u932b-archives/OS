@@ -463,12 +463,14 @@ int main(int argc, char *argv[])
 								{
                                 	to_add = symbol_table[use_target].value;
                                     symbol_table[use_target].is_used = true;
-                                    result = (stoi(tmp_arr)/1000)*1000 + to_add;
-                                    printf ("%d\n", result);
+                                    printf ("%d\n", (stoi(tmp_arr)/1000)*1000 +
+                                        to_add);
                                 }
                                 else
                                 {
-                                    //TODO
+                                    cout << (stoi(tmp_arr)/1000)*1000 <<
+                                        " Error: " << use_target <<
+                                        " is not defined; zero used\n";
                                 }
                             }
                             else if (tmp_prog_txt == 'R')
@@ -546,6 +548,7 @@ int main(int argc, char *argv[])
         fclose(ifp);
 
         // Warning output
+        cout << endl;
 	    for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
      	iter != symbol_table.end();
      	++iter )
