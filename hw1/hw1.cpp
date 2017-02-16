@@ -475,8 +475,19 @@ int main(int argc, char *argv[])
                             }
                             else if (tmp_prog_txt == 'R')
                             {
-                                result = stoi(tmp_arr) + base_address;
-                                printf ("%d\n", result);
+                                if (stoi(tmp_arr) % 1000 > section_counter)
+                                {
+                                    result = (stoi(tmp_arr) / 1000)*1000 +
+                                        base_address;
+                                    cout << result;
+                                    cout << " Error: Relative address exceeds"
+                                        " module size; zero used\n";
+                                }
+                                else
+                                {
+                                    result = stoi(tmp_arr) + base_address;
+                                    printf ("%d\n", result);
+                                }
                             }
                             else if (tmp_prog_txt == 'I')
                             {
