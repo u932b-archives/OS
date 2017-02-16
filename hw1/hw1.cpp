@@ -456,6 +456,14 @@ int main(int argc, char *argv[])
                             int result;
                             if (tmp_prog_txt == 'E')
                             {
+                                if (stoi(tmp_arr)%1000 > le_use_list.size())
+                                {
+                                    printf ("%d", stoi(tmp_arr));
+                                    cout << " Error: External address exceeds"
+                                        " length of uselist; treated as immediate\n";
+                                }
+                                else
+                                {
 								string use_target = le_use_list[stoi(tmp_arr)%1000];
                                 int to_add;
 								if ( symbol_table.find(use_target
@@ -472,6 +480,7 @@ int main(int argc, char *argv[])
                                         " Error: " << use_target <<
                                         " is not defined; zero used\n";
                                 }
+}
                             }
                             else if (tmp_prog_txt == 'R')
                             {
@@ -525,7 +534,7 @@ int main(int argc, char *argv[])
                         // moving on to the next section
                         if (symbol_count == 0)
                         {
-                            if (cur_section == 1)
+                            if (cur_section == 2)
                             {
                                 // new use list
                                 le_use_list.clear();
