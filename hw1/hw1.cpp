@@ -2,9 +2,15 @@
 # include <string.h>
 # include <stdlib.h>
 # include <ctype.h>
+# include <map>
+# include <String>
+# include <iostream>
+#include <set>
+using namespace std;
 
 #define pass (void)0
 int max_arr_size = 17;
+int machine_size = 512;
 
 void check_arr_size(int combo, int max_arr_size)
 {
@@ -43,6 +49,7 @@ void add_char_to_tmparr(int* combo, char c, char* tmp_arr)
     //         "currently: %d\n", tmp_arr, combo);
 }
 
+
 int main(int argc, char *argv[])
 {
 	if ( argc == 2 ) {
@@ -67,16 +74,19 @@ int main(int argc, char *argv[])
     // const int* section[3] = {0, 1, 2};
     int cur_section = 0;
 
-    typedef struct symbol
-    {
-       char* key;
-       int value;
-    } a_symbol;
-    int t_size = 0;
+    // typedef struct symbol
+    // {
+    //    char* key;
+    //    int value;
+    // } a_symbol;
+    // int t_size = 0;
 
-    // symbol table
-    a_symbol* symbol_table = (a_symbol*) malloc(sizeof(a_symbol) * 1);
-    // a_symbol* symbol_table = (a_symbol*) malloc(sizeof(a_symbol) * t_size);
+    // // symbol table
+    // a_symbol* symbol_table = (a_symbol*) malloc(sizeof(a_symbol) * 1);
+    // // a_symbol* symbol_table = (a_symbol*) malloc(sizeof(a_symbol) * t_size);
+    map<string, int> symbol_table;
+    std::set<string> duplicates;
+
 
     ifp = fopen(input_file, "r");
     if (ifp)
@@ -99,6 +109,9 @@ int main(int argc, char *argv[])
         int combo = 0;
         tmp_arr = (char*)malloc((combo+1)*sizeof(c));
         tmp_arr[combo] = '\0';
+
+
+        string map_key;
 
 
         while ((c = getc(ifp)) != EOF)
@@ -208,16 +221,12 @@ int main(int argc, char *argv[])
                     {
                         if (symbol_count % 2 == 0)
                         {
-                            t_size++;
-                            symbol_table = (a_symbol*) realloc(symbol_table,
-                                t_size*sizeof(a_symbol));
-                            symbol_table[t_size-1].key = (char*)malloc(sizeof(tmp_arr));
-                            strncpy(symbol_table[t_size-1].key, tmp_arr,
-                                    sizeof(tmp_arr));
-                            // *symbol_table[t_size-1].key = tmp_arr;
+                            // symbol_table[tmp_arr] = -1;
+                            // strncpy(map_key, tmp_arr, sizeof(tmp_arr));
+                            map_key = tmp_arr;
+                            // printf ("%s\n", map_key);
                             // printf ("written key to symbol_table: %s\n",
                             //        symbol_table[t_size-1].key);
-                            // symbol_table[0].key = tmp_arr;
                             // printf ("%s\n", tmp_arr);
                         }
                         else if (symbol_count % 2 == 1)
@@ -225,8 +234,16 @@ int main(int argc, char *argv[])
                             // somehow sscanf not working
                             // int i;
                             // printf ("sscanf: %d\n", sscanf(tmp_arr, "%d",&i));
-                            symbol_table[t_size-1].value = base_address +
-                                atoi(tmp_arr);
+                            if (symbol_table.find(map_key) == symbol_table.end())
+                            {
+                                symbol_table[map_key] = base_address + atoi(tmp_arr);
+                            }
+                            else
+                            {
+                                duplicates.insert(map_key);
+                            }
+                            /*symbol_table[t_size-1].value = base_address +
+                                atoi(tmp_arr);*/
                             // printf ("write val to symbol_table: %s\n", tmp_arr);
                             // printf ("key in symbol_table1: %s\n",
                             // symbol_table[t_size-1].key);
@@ -284,14 +301,31 @@ int main(int argc, char *argv[])
         exit (1);
     }
 
+
     printf ("Symbol Table\n");
+	for( std::map<string, int>::iterator iter = symbol_table.begin();
+     	iter != symbol_table.end();
+     	++iter )
+	{
+        if (duplicates.find(iter->first) == duplicates.end())
+        {
+            std::cout << iter->first << "=" << iter->second << "\n";
+        }
+        else
+        {
+            std::cout << iter->first << "=" << iter->second <<
+            " Error: This variable is multiple times defined; first value used"
+            << "\n";
+        }
+	}
+	/*
     int i;
     for (i = 0; i < t_size; i++)
     {
         printf ("%s=%d\n",
         symbol_table[i].key, symbol_table[i].value);
         // free(symbol_table[i].key);
-    }
+    }*/
     // free(symbol_table);
 
 
@@ -471,6 +505,7 @@ int main(int argc, char *argv[])
                         {
                             if (tmp_prog_txt == 'E')
                             {
+								char *use_target = le_use_list[atoi(tmp_arr)%1000];
                                 // printf ("Used to be: %s\n", tmp_arr);
                                 // printf ("here.\n");
                                 // printf ("Test: %s\n", le_use_list[0]);
@@ -480,23 +515,16 @@ int main(int argc, char *argv[])
                                 int to_add;
                                 // use_count is unset
                                 // printf ("QQQ %d\n", use_count);
-								// printf ("QQ %s\n", le_use_list[atoi(tmp_arr)%1000]);
-                                for (i = 0; i < t_size; i++)
-                                {
-									if (equal(le_use_list[atoi(tmp_arr)%1000],
-											symbol_table[i].key))
-                                    {
+								// printf ("QQ %s\n", use_target);
+								if ( symbol_table.find(use_target
+								) != symbol_table.end() )
+								{
                                         // printf ("key to print:%s\n",
                                         //         symbol_table[i].key);
                                         // printf ("val to print:%d\n",
                                         //         symbol_table[i].value);
 
-                                        to_add = symbol_table[i].value;
-                                    }
-                                    else
-                                    {
-                                        pass;
-                                    }
+                                	to_add = symbol_table[use_target];
                                 }
                                 printf ("%d\n", (atoi(tmp_arr)/1000)*1000 +
                                         to_add);
