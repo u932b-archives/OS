@@ -45,6 +45,21 @@ class Def_Symbol : public Symbol{
     void set_values (int, bool, bool, int);
 };
 
+class Use_Symbol : public Symbol{
+    public:
+    string symbol_name;
+    int defined_module;
+    bool is_defined;
+    void set_values (string&, bool, int);
+};
+
+void Use_Symbol::set_values(string& name, bool defined, int module)
+{
+    symbol_name = name;
+    is_defined = defined;
+    defined_module = module;
+}
+
 void Def_Symbol::set_values (int val, bool dup, bool used, int module) {
   has_duplicate = dup;
   value = val;
@@ -93,7 +108,6 @@ int main(int argc, char *argv[])
         int cur_module = 1;
 
         string tmp_arr;
-
 
         string map_key;
 
@@ -304,12 +318,14 @@ int main(int argc, char *argv[])
         int base_address = 0;
         int prev_section_counter = 0;
         int addr_counter = 0;
+        int cur_module = 1;
 
         // tmp array
         string tmp_arr;
 
         // use list
-        std:vector<string> le_use_list;
+        vector<string> le_use_list;
+        vector<Use_Symbol> too_much_list;
 
         // tmp storage
         char tmp_prog_txt;
@@ -422,7 +438,26 @@ int main(int argc, char *argv[])
                     // Specifics actions for passs2
                     if (cur_section == 1)
                     {
+						/*if ( symbol_table.find(tmp_arr
+						) != symbol_table.end() )
+						{
+                            le_use_list.push_back(tmp_arr);
+                        }
+                        else
+                        {// the thing going in use_list is not defined
+                            Use_Symbol rogue_symbol;
+                            rogue_symbol.set_values(tmp_arr, false, cur_module);
+                            undefined_list.push_back(rogue_symbol);
+                        }*/
+                        // Even if not in symbol table, still push to use_list;
+                        // Input-8 occurs when too much in use_list.
                         le_use_list.push_back(tmp_arr);
+                        if (symbol_table.size() < le_use_list.size())
+                        {
+                            Use_Symbol too_much_symbol;
+                            too_much_symbol.set_values(tmp_arr, false, cur_module);
+                            too_much_list.push_back(too_much_symbol);
+                        }
                     }
                     if (cur_section == 2)
                     {
@@ -456,7 +491,7 @@ int main(int argc, char *argv[])
                             int result;
                             if (tmp_prog_txt == 'E')
                             {
-                                if (stoi(tmp_arr)%1000 > le_use_list.size())
+                                if (stoi(tmp_arr)%1000 >= le_use_list.size())
                                 {
                                     printf ("%d", stoi(tmp_arr));
                                     cout << " Error: External address exceeds"
@@ -473,6 +508,7 @@ int main(int argc, char *argv[])
                                     symbol_table[use_target].is_used = true;
                                     printf ("%d\n", (stoi(tmp_arr)/1000)*1000 +
                                         to_add);
+                                // cout << "here\n";
                                 }
                                 else
                                 {
@@ -528,7 +564,7 @@ int main(int argc, char *argv[])
                     tmp_arr.clear();
 
                     if (symbol_count!= -1)
-                    {
+                {
                         symbol_count--;
 
                         // moving on to the next section
@@ -544,6 +580,10 @@ int main(int argc, char *argv[])
                             cur_section = cur_section % 3;
                             new_section = 1;
                             module_start = 0;
+                            if (cur_section == 0)
+                            {
+                                cur_module++;
+                            }
                         }
                     }
                     else
@@ -568,6 +608,11 @@ int main(int argc, char *argv[])
         fclose(ifp);
 
         // Warning output
+        for(vector<Use_Symbol>::size_type i = 0; i != too_much_list.size(); i++) {
+            cout << "Warning: Module " << too_much_list[i].defined_module <<
+                ": "<< too_much_list[i].symbol_name <<" appeared in the uselist"
+                " but was not actually used\n";
+        }
         cout << endl;
 	    for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
      	iter != symbol_table.end();
