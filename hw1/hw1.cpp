@@ -278,30 +278,41 @@ int main(int argc, char *argv[])
             printf ("Input finished before sufficient symbols!\n");
         }
         fclose(ifp);
+
+	    for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
+         	iter != symbol_table.end();
+         	++iter )
+            if (iter->second.value > base_address-1)
+            {
+                cout << "Warning: Module " << iter->second.defined_module <<
+                    ": " << iter->first <<" too big " <<
+                    iter->second.value << " (max=" << base_address-1 <<
+                    ") assume zero relative\n";
+                symbol_table[iter->first].value = 0;
+            }
+
+        printf ("Symbol Table\n");
+	    for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
+         	iter != symbol_table.end();
+         	++iter )
+	    {
+            if (iter->second.has_duplicate == false)
+            {
+                std::cout << iter->first << "=" << iter->second.value << "\n";
+            }
+            else
+            {
+                std::cout << iter->first << "=" << iter->second.value <<
+                " Error: This variable is multiple times defined; first value used"
+                << "\n";
+            }
+	    }
     }
     else
     {
         fprintf (stderr, "Can't open file %s\n", input_file);
         exit (1);
     }
-
-
-    printf ("Symbol Table\n");
-	for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
-     	iter != symbol_table.end();
-     	++iter )
-	{
-        if (iter->second.has_duplicate == false)
-        {
-            std::cout << iter->first << "=" << iter->second.value << "\n";
-        }
-        else
-        {
-            std::cout << iter->first << "=" << iter->second.value <<
-            " Error: This variable is multiple times defined; first value used"
-            << "\n";
-        }
-	}
 
     // pass2
     ifp = fopen(input_file, "r");
