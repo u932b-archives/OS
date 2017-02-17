@@ -50,14 +50,17 @@ class Use_Symbol : public Symbol{
     string symbol_name;
     int defined_module;
     bool is_defined;
-    void set_values (string&, bool, int);
+    void set_values (string&, bool, int, bool);
+    bool is_used;
 };
 
-void Use_Symbol::set_values(string& name, bool defined, int module)
+void Use_Symbol::set_values(string& name, bool defined, int module, bool used)
 {
     symbol_name = name;
+    // defined in def list or not
     is_defined = defined;
     defined_module = module;
+    is_used = used;
 }
 
 void Def_Symbol::set_values (int val, bool dup, bool used, int module) {
@@ -324,8 +327,8 @@ int main(int argc, char *argv[])
         string tmp_arr;
 
         // use list
-        vector<string> le_use_list;
-        vector<Use_Symbol> too_much_list;
+        vector<Use_Symbol> le_use_list;
+        // vector<Use_Symbol> unused_list;
 
         // tmp storage
         char tmp_prog_txt;
@@ -451,13 +454,16 @@ int main(int argc, char *argv[])
                         }*/
                         // Even if not in symbol table, still push to use_list;
                         // Input-8 occurs when too much in use_list.
-                        le_use_list.push_back(tmp_arr);
+                        Use_Symbol a_use_symbol;
+                        a_use_symbol.set_values(tmp_arr, false, cur_module, false);
+                        le_use_list.push_back(a_use_symbol);
+                        /*
                         if (symbol_table.size() < le_use_list.size())
                         {
-                            Use_Symbol too_much_symbol;
-                            too_much_symbol.set_values(tmp_arr, false, cur_module);
-                            too_much_list.push_back(too_much_symbol);
-                        }
+                            Use_Symbol overflow_symbol;
+                            overflow_symbol.set_values(tmp_arr, false, cur_module, false);
+                            unused_list.push_back(overflow_symbol);
+                        }*/
                     }
                     if (cur_section == 2)
                     {
@@ -499,22 +505,27 @@ int main(int argc, char *argv[])
                                 }
                                 else
                                 {
-								string use_target = le_use_list[stoi(tmp_arr)%1000];
+								string use_target = le_use_list[stoi(tmp_arr)%1000].symbol_name;
                                 int to_add;
 								if ( symbol_table.find(use_target
 								) != symbol_table.end() )
 								{
+                                    le_use_list[stoi(tmp_arr)%1000].is_used = true;
+                                    le_use_list[stoi(tmp_arr)%1000].is_defined = true;
                                 	to_add = symbol_table[use_target].value;
                                     symbol_table[use_target].is_used = true;
                                     printf ("%d\n", (stoi(tmp_arr)/1000)*1000 +
                                         to_add);
-                                // cout << "here\n";
                                 }
                                 else
                                 {
                                     cout << (stoi(tmp_arr)/1000)*1000 <<
                                         " Error: " << use_target <<
                                         " is not defined; zero used\n";
+                                    // just in case
+                                    le_use_list[stoi(tmp_arr)%1000].is_defined = false;
+                                    // to suppress the is_used Warning
+                                    le_use_list[stoi(tmp_arr)%1000].is_used = true;
                                 }
 }
                             }
@@ -572,6 +583,14 @@ int main(int argc, char *argv[])
                         {
                             if (cur_section == 2)
                             {
+                                for(vector<Use_Symbol>::size_type i = 0; i != le_use_list.size(); i++) {
+                                    if (le_use_list[i].is_used == false)
+                                    {
+                                    cout << "Warning: Module " << le_use_list[i].defined_module <<
+                                        ": "<< le_use_list[i].symbol_name <<" appeared in the uselist"
+                                        " but was not actually used\n";
+                                    }
+                                }
                                 // new use list
                                 le_use_list.clear();
                             }
@@ -583,6 +602,7 @@ int main(int argc, char *argv[])
                             if (cur_section == 0)
                             {
                                 cur_module++;
+
                             }
                         }
                     }
@@ -608,12 +628,13 @@ int main(int argc, char *argv[])
         fclose(ifp);
 
         // Warning output
-        for(vector<Use_Symbol>::size_type i = 0; i != too_much_list.size(); i++) {
-            cout << "Warning: Module " << too_much_list[i].defined_module <<
-                ": "<< too_much_list[i].symbol_name <<" appeared in the uselist"
+        /*
+        for(vector<Use_Symbol>::size_type i = 0; i != unused_list.size(); i++) {
+            cout << "Warning: Module " << unused_list[i].defined_module <<
+                ": "<< unused_list[i].symbol_name <<" appeared in the uselist"
                 " but was not actually used\n";
-        }
-        cout << endl;
+        }*/
+        cout << endl << endl;
 	    for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
      	iter != symbol_table.end();
      	++iter )
