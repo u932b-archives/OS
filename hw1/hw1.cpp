@@ -339,6 +339,15 @@ int main(int argc, char *argv[])
         if (module_start != 0 || cur_section != 0)
         {
             // This should just means the pass was not ended clean.
+            if (cur_section == 0)
+            {
+                cout << "Parse Error line " <<
+                    line_num <<
+                    " offset " << c_count - tmp_arr.length()
+                    << ": SYM_EXPECTED\n";
+                exit (1);
+            }
+
             if (cur_section == 1)
             {
                 if (isInteger(tmp_arr))
