@@ -165,9 +165,12 @@ int main(int argc, char *argv[])
                             // printf ("symbol_count is: %d\n", symbol_count);
                             if (symbol_count % 2 == 1 && !isdigit(c))
                             {
-                                printf ("Error: Should be a digit instead:"
-                                        "%c\n", c);
+                                // Should be a digit instead
+                                cout << "Parse Error line " << line_num <<
+                                    " offset " << c_count << ": NUM_EXPECTED\n";
+                                exit (1);
                             }
+
                             tmp_arr+=c;
                             break;
 
@@ -495,11 +498,6 @@ int main(int argc, char *argv[])
                                 symbol_count = section_counter*2;
                             }
                             // printf ("symbol_count is: %d\n", symbol_count);
-                            if (symbol_count % 2 == 1 && !isdigit(c))
-                            {
-                                printf ("Error: Should be a digit instead:"
-                                        "%c\n", c);
-                            }
                             tmp_arr+=c;
                             break;
                         case 1:
