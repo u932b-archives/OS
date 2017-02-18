@@ -236,6 +236,17 @@ int main(int argc, char *argv[])
                     }
 
                     section_counter = std::stoi (tmp_arr);
+                    if (cur_section == 0)
+                    {
+                        if (section_counter > 16)
+                        {
+                            cout << "Parse Error line " <<
+                            line_num << " offset "
+                            << c_count - tmp_arr.length() + 1 <<
+                            ": TO_MANY_DEF_IN_MODULE\n";
+                            exit (1);
+                        }
+                    }
                     if (cur_section == 1)
                     {
                         // TODO
@@ -404,10 +415,12 @@ int main(int argc, char *argv[])
             {
                 if (symbol_count != -1)
                 {
-                    cout << "Parse Error line " << def_count_loc.line_num <<
-                        " offset " << def_count_loc.offset <<
-                        ": TO_MANY_DEF_IN_MODULE\n";
-                    exit (1);
+                    // Something else should be printed here.
+                    pass;
+                    // cout << "Parse Error line " << def_count_loc.line_num <<
+                    //     " offset " << def_count_loc.offset <<
+                    //     ": TO_MANY_DEF_IN_MODULE\n";
+                    // exit (1);
                 }
                 else
                 {
