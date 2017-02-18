@@ -334,6 +334,12 @@ int main(int argc, char *argv[])
                     {
                         if (symbol_count % 2 == 0)
                         {
+                            if (tmp_arr.length() > 16)
+                            {
+                                cout << "Parse Error line " << line_num << " offset "
+                                    << c_count - tmp_arr.length() + 1 <<": SYM_TOO_LONG\n";
+                                exit (1);
+                            }
                             map_key = tmp_arr;
                         }
                         else if (symbol_count % 2 == 1)
