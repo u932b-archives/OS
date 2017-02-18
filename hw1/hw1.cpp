@@ -758,11 +758,22 @@ int main(int argc, char *argv[])
                         else
                         {
                             int result;
-                            if (tmp_prog_txt == 'E')
+                            if (stoi(tmp_arr) > 9999)
+                            {
+                                if (tmp_prog_txt == 'R')
+                                {
+                                    cout << "9999 Error: Illegal opcode; treated as 9999\n";
+                                }
+                                else
+                                {
+                                    cout << "9999 Error: Illegal immediate value; treated as 9999\n";
+                                }
+                            }
+                            else if (tmp_prog_txt == 'E')
                             {
                                 if (stoi(tmp_arr)%1000 >= le_use_list.size())
                                 {
-                                    printf ("%d", stoi(tmp_arr));
+                                    printf ("%04d", stoi(tmp_arr));
                                     cout << " Error: External address exceeds"
                                         " length of uselist; treated as immediate\n";
                                 }
@@ -777,7 +788,7 @@ int main(int argc, char *argv[])
                                     le_use_list[stoi(tmp_arr)%1000].is_defined = true;
                                 	to_add = symbol_table[use_target].value;
                                     symbol_table[use_target].is_used = true;
-                                    printf ("%d\n", (stoi(tmp_arr)/1000)*1000 +
+                                    printf ("%04d\n", (stoi(tmp_arr)/1000)*1000 +
                                         to_add);
                                 }
                                 else
@@ -805,13 +816,13 @@ int main(int argc, char *argv[])
                                 else
                                 {
                                     result = stoi(tmp_arr) + base_address;
-                                    printf ("%d\n", result);
+                                    printf ("%04d\n", result);
                                 }
                             }
                             else if (tmp_prog_txt == 'I')
                             {
                                 result = stoi(tmp_arr);
-                                printf ("%d\n", result);
+                                printf ("%04d\n", result);
                             }
                             else if (tmp_prog_txt == 'A')
                             {
@@ -819,13 +830,13 @@ int main(int argc, char *argv[])
                                 // cout << "result:" << result << endl;
                                 if ((result % 1000) > machine_size)
                                 {
-                                    printf ("%d ", (result/1000)*1000);
+                                    printf ("%04d ", (result/1000)*1000);
                                     cout << "Error: Absolute address exceeds"
                                         " machine size; zero used\n";
                                 }
                                 else
                                 {
-                                    printf ("%d\n", result);
+                                    printf ("%04d\n", result);
                                 }
                             }
                             else
