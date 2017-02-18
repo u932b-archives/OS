@@ -276,8 +276,8 @@ int main(int argc, char *argv[])
                             if (isInteger(tmp_arr))
                             {
                                 cout << "Parse Error line " <<
-                                    next_to_last_symbol_loc.line_num <<
-                                    " offset " << next_to_last_symbol_loc.offset + 1
+                                    line_num <<
+                                    " offset " << c_count
                                     << ": SYM_EXPECTED\n";
                                 exit (1);
                             }
@@ -287,8 +287,8 @@ int main(int argc, char *argv[])
                             if (!isInteger(tmp_arr))
                             {
                                 cout << "Parse Error line " <<
-                                    next_to_last_symbol_loc.line_num <<
-                                    " offset " << next_to_last_symbol_loc.offset + 1
+                                    line_num <<
+                                    " offset " << c_count
                                     << ": ADDR_EXPECTED\n";
                                 exit (1);
                             }
@@ -338,14 +338,47 @@ int main(int argc, char *argv[])
         }
         if (module_start != 0 || cur_section != 0)
         {
-            // fuck all the problems are coming here.
             // This should just means the pass was not ended clean.
+            if (cur_section == 1)
+            {
+                if (isInteger(tmp_arr))
+                {
+                    cout << "Parse Error line " <<
+                        line_num <<
+                        " offset " << c_count - tmp_arr.length()
+                        << ": SYM_EXPECTED\n";
+                    exit (1);
+                }
+            }
+            // for input 2 where the pass ends confusingly
+            if (cur_section == 2)
+            {
+                 if (symbol_count % 2 == 0)
+                 {
+                     if (isInteger(tmp_arr))
+                     {
+                         cout << "Parse Error line " <<
+                             line_num <<
+                             " offset " << c_count
+                             << ": SYM_EXPECTED\n";
+                         exit (1);
+                     }
+                 }
+                 else
+                 {
+                     if (!isInteger(tmp_arr))
+                     {
+                         cout << "Parse Error line " <<
+                             line_num <<
+                             " offset " << c_count
+                             << ": ADDR_EXPECTED\n";
+                         exit (1);
+                     }
+
+                 }
+            }
             printf ("Error: File ended before finishing a module\n");
             exit (1);
-            // cout << "Parse Error line " << line_num <<
-            //      " offset " << c_count
-            //      << ": YYY_EXPECTED\n";
-            // exit (1);
         }
         if (symbol_count != -1 || expect_symbol == 1)
         {
