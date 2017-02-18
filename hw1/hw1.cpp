@@ -83,7 +83,8 @@ struct location
 {
     int line_num;
     int offset;
-} last_symbol_location, next_to_last_symbol_loc, def_count_loc;
+    bool is_delim;
+} last_symbol_location, def_count_loc;
 
 class Use_Count {
     public:
@@ -157,10 +158,10 @@ int main(int argc, char *argv[])
         while ((c = getc(ifp)) != EOF)
         {
             c_count++;
-            // cout << c << " ";
 
             if (c != '\t' && c != '\n' && c != ' ')
             {
+                // cout << c << " ";
                 fookin_delim = 0;
                 expect_symbol = 0;
 
@@ -226,8 +227,13 @@ int main(int argc, char *argv[])
             else
             // We hit an delimiter, time to flush tmp_arr
             {
+                // cout << "yo";
+                // cout << c_count << " ";
                 if (fookin_delim == 1 )
                 {
+                    last_symbol_location.line_num = line_num;
+                    last_symbol_location.offset = c_count;
+                    last_symbol_location.is_delim = true;
                     if (c == '\n')
                     {
                         line_num++;
@@ -444,12 +450,21 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    // Input-13
+                    // Input-13, 18
                     // Here it is expect two offset after the previous symbol
+                    int offset;
+                    if (last_symbol_location.is_delim == true)
+                    {// case for Input-18
+                        offset = last_symbol_location.offset + 1;
+                    }
+                    else
+                    {
+                        offset = last_symbol_location.offset + 2;
+                    }
                     cout << "Parse Error line " <<
                         last_symbol_location.line_num <<
                         // line_num <<
-                        " offset " << last_symbol_location.offset + 2
+                        " offset " << offset
                         // " offset " << c_count - tmp_arr.length() + 1
                         << ": SYM_EXPECTED\n";
                     exit (1);
