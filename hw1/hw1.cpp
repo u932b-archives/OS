@@ -146,6 +146,8 @@ int main(int argc, char *argv[])
         int c_count = -1;
         int line_num = 1;
 
+        int num_instr = 0;
+
         // def_count_loc.line_num = -1;
         // def_count_loc.offset = -1;
 
@@ -155,6 +157,7 @@ int main(int argc, char *argv[])
         while ((c = getc(ifp)) != EOF)
         {
             c_count++;
+            // cout << c << " ";
 
             if (c != '\t' && c != '\n' && c != ' ')
             {
@@ -225,6 +228,11 @@ int main(int argc, char *argv[])
             {
                 if (fookin_delim == 1 )
                 {
+                    if (c == '\n')
+                    {
+                        line_num++;
+                        c_count = -1;
+                    }
                     continue;
                 }
                 if (new_section == 1)
@@ -249,7 +257,7 @@ int main(int argc, char *argv[])
                     }
                     if (cur_section == 1)
                     {
-                        // TODO
+                        // Input-16
                         if (section_counter > 16)
                         {
                             cout << "Parse Error line " <<
@@ -265,6 +273,18 @@ int main(int argc, char *argv[])
                         // Use_Count a_use_count;
                         // a_use_count.set_values(cur_section, section_counter);
                         // use_count_vec.push_back (a_use_count);
+                    }
+                    // Input-17
+                    if (cur_section == 2)
+                    {
+                        num_instr += section_counter;
+                        if (num_instr > 512)
+                        {
+                            cout << "Parse Error line " << line_num <<
+                                " offset " << c_count - tmp_arr.length() + 1
+                                << ": TO_MANY_INSTR\n";
+                            exit (1);
+                        }
                     }
 
                     if (section_counter == 0)
