@@ -26,6 +26,15 @@ class ObjFactory
       return 0;
     }
 };*/
+inline bool isInteger(const std::string & s)
+{
+   if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false ;
+
+   char * p ;
+   strtol(s.c_str(), &p, 10) ;
+
+   return (*p == 0) ;
+}
 
 class Symbol {
   public:
@@ -69,6 +78,12 @@ void Def_Symbol::set_values (int val, bool dup, bool used, int module) {
   is_used = used;
   defined_module = module;
 }
+
+struct location
+{
+    int line_num;
+    int offset;
+} last_symbol_location, next_to_last_symbol_loc;
 
 int main(int argc, char *argv[])
 {
@@ -114,9 +129,13 @@ int main(int argc, char *argv[])
 
         string map_key;
 
+        int c_count = 0;
+        int line_num = 1;
 
         while ((c = getc(ifp)) != EOF)
         {
+            c_count++;
+
             if (c != '\t' && c != '\n' && c != ' ')
             {
                 fookin_delim = 0;
@@ -237,6 +256,51 @@ int main(int argc, char *argv[])
                             }
                         }
                     }
+                    else if (cur_section == 1)
+                    {
+                        if (isInteger(tmp_arr))
+                        {
+                            cout << "Parse Error line " <<
+                                line_num <<
+                                " offset " << c_count - tmp_arr.length()
+                                << ": SYM_EXPECTED\n";
+                            exit (1);
+                        }
+                    }
+                    // TODO
+                    else if (cur_section == 2)
+                    {
+                        // check type
+                        if (symbol_count % 2 == 0)
+                        {
+                            if (isInteger(tmp_arr))
+                            {
+                                cout << "Parse Error line " <<
+                                    next_to_last_symbol_loc.line_num <<
+                                    " offset " << next_to_last_symbol_loc.offset + 1
+                                    << ": SYM_EXPECTED\n";
+                                exit (1);
+                            }
+                        }
+                        else
+                        {
+                            if (!isInteger(tmp_arr))
+                            {
+                                cout << "Parse Error line " <<
+                                    next_to_last_symbol_loc.line_num <<
+                                    " offset " << next_to_last_symbol_loc.offset + 1
+                                    << ": ADDR_EXPECTED\n";
+                                exit (1);
+                            }
+
+                        }
+                    }
+
+                    // Shouldn't need this much
+                    next_to_last_symbol_loc.line_num = last_symbol_location.line_num;
+                    next_to_last_symbol_loc.offset = last_symbol_location.offset;
+                    last_symbol_location.line_num = line_num;
+                    last_symbol_location.offset = c_count;
 
                     // flush
                     tmp_arr.clear();
@@ -264,12 +328,24 @@ int main(int argc, char *argv[])
                     }
                 }
                 fookin_delim = 1;
+                if (c == '\n')
+                {
+                    line_num++;
+                    c_count = 0;
+                }
                 // continue;
             }
         }
         if (module_start != 0 || cur_section != 0)
         {
+            // fuck all the problems are coming here.
+            // This should just means the pass was not ended clean.
             printf ("Error: File ended before finishing a module\n");
+            exit (1);
+            // cout << "Parse Error line " << line_num <<
+            //      " offset " << c_count
+            //      << ": YYY_EXPECTED\n";
+            // exit (1);
         }
         if (symbol_count != -1 || expect_symbol == 1)
         {
@@ -629,6 +705,8 @@ int main(int argc, char *argv[])
         if (module_start != 0 || cur_section != 0)
         {
             printf ("Error: File ended before finishing a module\n");
+            // cout << "Parse Error line " << line_num << " offset " << c_count << ": SYM_EXPECTED";
+            // exit (1);
         }
         if (symbol_count != -1 || expect_symbol == 1)
         {
