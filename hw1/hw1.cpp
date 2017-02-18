@@ -85,6 +85,19 @@ struct location
     int offset;
 } last_symbol_location, next_to_last_symbol_loc, def_count_loc;
 
+class Use_Count {
+    public:
+        int defined_module;
+        int count;
+        location use_count_loc;
+        void set_values (int, int);
+};
+
+void Use_Count::set_values (int module, int val)
+{
+    defined_module = module;
+    count = val;
+}
 
 int main(int argc, char *argv[])
 {
@@ -136,6 +149,8 @@ int main(int argc, char *argv[])
         // def_count_loc.line_num = -1;
         // def_count_loc.offset = -1;
 
+        // map <int, location> use_count_loc_dict;
+        vector <Use_Count> use_count_vec;
 
         while ((c = getc(ifp)) != EOF)
         {
@@ -221,6 +236,25 @@ int main(int argc, char *argv[])
                     }
 
                     section_counter = std::stoi (tmp_arr);
+                    if (cur_section == 1)
+                    {
+                        // TODO
+                        if (section_counter > 16)
+                        {
+                            cout << "Parse Error line " <<
+                            line_num << " offset "
+                            << c_count - tmp_arr.length() + 1 <<
+                            ": TO_MANY_USE_IN_MODULE\n";
+                            exit (1);
+                        }
+                        // store temporary section_counter here.
+                        // location use_count_loc;
+                        // use_count_loc.line_num = line_num;
+                        // use_count_loc.offset = c_count - 1;
+                        // Use_Count a_use_count;
+                        // a_use_count.set_values(cur_section, section_counter);
+                        // use_count_vec.push_back (a_use_count);
+                    }
 
                     if (section_counter == 0)
                     {
@@ -246,9 +280,15 @@ int main(int argc, char *argv[])
                         // }
 
                     }
+                    last_symbol_location.line_num = line_num;
+                    last_symbol_location.offset = c_count-1;
                     tmp_arr.clear();
                     fookin_delim = 1;
-                    continue;
+                    // Untested Fix
+                    if (c != '\n')
+                    {
+                        continue;
+                    }
                 }
                 if (fookin_delim == 0)
                 {
@@ -279,6 +319,7 @@ int main(int argc, char *argv[])
                     {
                         if (isInteger(tmp_arr))
                         {
+                            // Not used?
                             cout << "Parse Error line " <<
                                 line_num <<
                                 " offset " << c_count - tmp_arr.length() +1
@@ -286,7 +327,6 @@ int main(int argc, char *argv[])
                             exit (1);
                         }
                     }
-                    // TODO
                     else if (cur_section == 2)
                     {
                         // check type
@@ -294,6 +334,7 @@ int main(int argc, char *argv[])
                         {
                             if (isInteger(tmp_arr))
                             {
+                                // Not used?
                                 cout << "Parse Error line " <<
                                     line_num <<
                                     " offset " << c_count + 1
@@ -305,6 +346,7 @@ int main(int argc, char *argv[])
                         {
                             if (!isInteger(tmp_arr))
                             {
+                                // Not used?
                                 cout << "Parse Error line " <<
                                     line_num <<
                                     " offset " << c_count + 1
@@ -316,8 +358,6 @@ int main(int argc, char *argv[])
                     }
 
                     // Shouldn't need this much
-                    next_to_last_symbol_loc.line_num = last_symbol_location.line_num;
-                    next_to_last_symbol_loc.offset = last_symbol_location.offset;
                     last_symbol_location.line_num = line_num;
                     last_symbol_location.offset = c_count-1;
 
@@ -371,9 +411,13 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
+                    // Input-13
+                    // Here it is expect two offset after the previous symbol
                     cout << "Parse Error line " <<
-                        line_num <<
-                        " offset " << c_count - tmp_arr.length() + 1
+                        last_symbol_location.line_num <<
+                        // line_num <<
+                        " offset " << last_symbol_location.offset + 2
+                        // " offset " << c_count - tmp_arr.length() + 1
                         << ": SYM_EXPECTED\n";
                     exit (1);
                 }
@@ -383,6 +427,7 @@ int main(int argc, char *argv[])
             {
                 if (isInteger(tmp_arr))
                 {
+                    // Not used?
                     cout << "Parse Error line " <<
                         line_num <<
                         " offset " << c_count - tmp_arr.length() + 1
@@ -397,6 +442,7 @@ int main(int argc, char *argv[])
                  {
                      if (isInteger(tmp_arr))
                      {
+                         // Not used
                          cout << "Parse Error line " <<
                              line_num <<
                              " offset " << c_count + 1
@@ -408,25 +454,39 @@ int main(int argc, char *argv[])
                  {
                      if (!isInteger(tmp_arr))
                      {
+                         // Expected two offsets after the previous
                          cout << "Parse Error line " <<
-                             line_num <<
-                             " offset " << c_count + 1
+                             last_symbol_location.line_num <<
+                             " offset " << last_symbol_location.offset + 2
                              << ": ADDR_EXPECTED\n";
                          exit (1);
                      }
 
                  }
             }
+            // cout << "Input-16\n";
             printf ("Error: File ended before finishing a module\n");
             exit (1);
         }
         if (symbol_count != -1 || expect_symbol == 1)
         {
-            // TODO
             // Find where the fuck the wrong is.
             printf ("Input finished before sufficient symbols!\n");
         }
         fclose(ifp);
+
+        // Probably dont need this
+        // for(vector<Use_Count>::size_type i = 0; i != use_count_vec.size(); i++)
+        // {
+        //     if (use_count_vec[i].count > symbol_table.size())
+        //     {
+        //         cout << "Parse Error line " <<
+        //             use_count_vec[i].use_count_loc.line_num << " offset "
+        //             <<  use_count_vec[i].use_count_loc.offset <<
+        //             ": TO_MANY_USE_IN_MODULE\n";
+        //         exit (1);
+        //     }
+        // }
 
 	    for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
          	iter != symbol_table.end();
