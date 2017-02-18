@@ -83,7 +83,8 @@ struct location
 {
     int line_num;
     int offset;
-} last_symbol_location, next_to_last_symbol_loc;
+} last_symbol_location, next_to_last_symbol_loc, def_count_loc;
+
 
 int main(int argc, char *argv[])
 {
@@ -129,8 +130,12 @@ int main(int argc, char *argv[])
 
         string map_key;
 
-        int c_count = 0;
+        int c_count = -1;
         int line_num = 1;
+
+        // def_count_loc.line_num = -1;
+        // def_count_loc.offset = -1;
+
 
         while ((c = getc(ifp)) != EOF)
         {
@@ -167,7 +172,7 @@ int main(int argc, char *argv[])
                             {
                                 // Should be a digit instead
                                 cout << "Parse Error line " << line_num <<
-                                    " offset " << c_count << ": NUM_EXPECTED\n";
+                                    " offset " << c_count+1 << ": NUM_EXPECTED\n";
                                 exit (1);
                             }
 
@@ -230,6 +235,17 @@ int main(int argc, char *argv[])
                         // printf ("section_counter is: %d\n", section_counter);
                         new_section = 0;
                     }
+
+                    if (cur_section == 0)
+                    {
+                        // if (def_count_loc.line_num == -1 &&
+                        //         def_count_loc.offset == -1)
+                        // {
+                            def_count_loc.line_num = line_num;
+                            def_count_loc.offset = c_count - 1;
+                        // }
+
+                    }
                     tmp_arr.clear();
                     fookin_delim = 1;
                     continue;
@@ -265,7 +281,7 @@ int main(int argc, char *argv[])
                         {
                             cout << "Parse Error line " <<
                                 line_num <<
-                                " offset " << c_count - tmp_arr.length()
+                                " offset " << c_count - tmp_arr.length() +1
                                 << ": SYM_EXPECTED\n";
                             exit (1);
                         }
@@ -280,7 +296,7 @@ int main(int argc, char *argv[])
                             {
                                 cout << "Parse Error line " <<
                                     line_num <<
-                                    " offset " << c_count
+                                    " offset " << c_count + 1
                                     << ": SYM_EXPECTED\n";
                                 exit (1);
                             }
@@ -291,7 +307,7 @@ int main(int argc, char *argv[])
                             {
                                 cout << "Parse Error line " <<
                                     line_num <<
-                                    " offset " << c_count
+                                    " offset " << c_count + 1
                                     << ": ADDR_EXPECTED\n";
                                 exit (1);
                             }
@@ -303,7 +319,7 @@ int main(int argc, char *argv[])
                     next_to_last_symbol_loc.line_num = last_symbol_location.line_num;
                     next_to_last_symbol_loc.offset = last_symbol_location.offset;
                     last_symbol_location.line_num = line_num;
-                    last_symbol_location.offset = c_count;
+                    last_symbol_location.offset = c_count-1;
 
                     // flush
                     tmp_arr.clear();
@@ -322,6 +338,8 @@ int main(int argc, char *argv[])
                             if (cur_section == 0)
                             {
                                 cur_module++;
+                                // def_count_loc.line_num = -1;
+                                // def_count_loc.offset = -1;
                             }
                         }
                     }
@@ -334,7 +352,7 @@ int main(int argc, char *argv[])
                 if (c == '\n')
                 {
                     line_num++;
-                    c_count = 0;
+                    c_count = -1;
                 }
                 // continue;
             }
@@ -344,11 +362,21 @@ int main(int argc, char *argv[])
             // This should just means the pass was not ended clean.
             if (cur_section == 0)
             {
-                cout << "Parse Error line " <<
-                    line_num <<
-                    " offset " << c_count - tmp_arr.length()
-                    << ": SYM_EXPECTED\n";
-                exit (1);
+                if (symbol_count != -1)
+                {
+                    cout << "Parse Error line " << def_count_loc.line_num <<
+                        " offset " << def_count_loc.offset <<
+                        ": TO_MANY_DEF_IN_MODULE\n";
+                    exit (1);
+                }
+                else
+                {
+                    cout << "Parse Error line " <<
+                        line_num <<
+                        " offset " << c_count - tmp_arr.length() + 1
+                        << ": SYM_EXPECTED\n";
+                    exit (1);
+                }
             }
 
             if (cur_section == 1)
@@ -357,7 +385,7 @@ int main(int argc, char *argv[])
                 {
                     cout << "Parse Error line " <<
                         line_num <<
-                        " offset " << c_count - tmp_arr.length()
+                        " offset " << c_count - tmp_arr.length() + 1
                         << ": SYM_EXPECTED\n";
                     exit (1);
                 }
@@ -371,7 +399,7 @@ int main(int argc, char *argv[])
                      {
                          cout << "Parse Error line " <<
                              line_num <<
-                             " offset " << c_count
+                             " offset " << c_count + 1
                              << ": SYM_EXPECTED\n";
                          exit (1);
                      }
@@ -382,7 +410,7 @@ int main(int argc, char *argv[])
                      {
                          cout << "Parse Error line " <<
                              line_num <<
-                             " offset " << c_count
+                             " offset " << c_count + 1
                              << ": ADDR_EXPECTED\n";
                          exit (1);
                      }
