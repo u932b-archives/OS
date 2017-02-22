@@ -13,19 +13,6 @@ using namespace std;
 int max_arr_size = 17;
 int machine_size = 512;
 
-/*
-class ObjFactory
-{
-  public:
-    static Box *newBox(const std::string &description)
-    {
-      if (description == "pretty big box")
-        return new PrettyBigBox;
-      if (description == "small box")
-        return new SmallBox;
-      return 0;
-    }
-};*/
 inline bool isInteger(const std::string & s)
 {
    if(s.empty() || ((!isdigit(s[0])) && (s[0] != '-') && (s[0] != '+'))) return false ;
@@ -115,9 +102,7 @@ int main(int argc, char *argv[])
     }
 
     char *input_file = argv[1];
-    FILE *ifp, *ofp;
-    // char *mode = "r";
-    char output_file[] = "out.list";
+    FILE *ifp;
     char c;
     int cur_section = 0;
 
@@ -132,7 +117,6 @@ int main(int argc, char *argv[])
         int expect_symbol = 0;
         int module_start = 1;
 
-        // section cur_section = def_list;
 
         // counters
         int section_counter = 0;
@@ -149,10 +133,6 @@ int main(int argc, char *argv[])
 
         int num_instr = 0;
 
-        // def_count_loc.line_num = -1;
-        // def_count_loc.offset = -1;
-
-        // map <int, location> use_count_loc_dict;
         vector <Use_Count> use_count_vec;
 
         while ((c = getc(ifp)) != EOF)
@@ -169,7 +149,6 @@ int main(int argc, char *argv[])
                 {
                     // This would print as many times as the number of char
                     // in the section_counter
-                    // printf ("We are at section: %d\n", (int)cur_section);
                     tmp_arr+=c;
                 }
                 else
@@ -177,16 +156,12 @@ int main(int argc, char *argv[])
                     switch (cur_section)
                     {
                         case 0:
-                            // printf ("current c: %c\n", c);
-                            // printf ("section_counter is: %d\n"
-                            // , section_counter);
                             module_start = 1;
                             if (section_counter > 0 && symbol_count == -1 )
                             {
                                 // This many symbols before next section
                                 symbol_count = section_counter*2;
                             }
-                            // printf ("symbol_count is: %d\n", symbol_count);
                             if (symbol_count % 2 == 1 && !isdigit(c))
                             {
                                 // Should be a digit instead
@@ -199,9 +174,6 @@ int main(int argc, char *argv[])
                             break;
 
                         case 1:
-                            // printf ("current c: %c\n", c);
-                            // printf ("section_counter is: %d\n", section_counter);
-                            // printf ("symbol_count is: %d\n", symbol_count);
                             if (section_counter > 0 && symbol_count == -1 )
                             {
                                 symbol_count = section_counter;
@@ -215,7 +187,6 @@ int main(int argc, char *argv[])
                                 symbol_count = section_counter * 2;
                                 base_address += section_counter;
                             }
-                            // printf ("symbol_count is: %d\n", symbol_count);
                             tmp_arr+=c;
                             break;
 
@@ -227,8 +198,6 @@ int main(int argc, char *argv[])
             else
             // We hit an delimiter, time to flush tmp_arr
             {
-                // cout << "yo";
-                // cout << c_count << " ";
                 if (fookin_delim == 1 )
                 {
                     last_symbol_location.line_num = line_num;
@@ -272,13 +241,6 @@ int main(int argc, char *argv[])
                             ": TO_MANY_USE_IN_MODULE\n";
                             exit (1);
                         }
-                        // store temporary section_counter here.
-                        // location use_count_loc;
-                        // use_count_loc.line_num = line_num;
-                        // use_count_loc.offset = c_count - 1;
-                        // Use_Count a_use_count;
-                        // a_use_count.set_values(cur_section, section_counter);
-                        // use_count_vec.push_back (a_use_count);
                     }
                     // Input-17
                     if (cur_section == 2)
@@ -295,27 +257,20 @@ int main(int argc, char *argv[])
 
                     if (section_counter == 0)
                     {
-                        // printf ("Hitting zero\n");
+                        // Zeros
                         cur_section++;
                         cur_section = cur_section % 3;
                         section_counter = 0;
-                        // printf ("We are at section: %d\n", (int)cur_section);
                     }
                     else
                     {
-                        // printf ("section_counter is: %d\n", section_counter);
                         new_section = 0;
                     }
 
                     if (cur_section == 0)
                     {
-                        // if (def_count_loc.line_num == -1 &&
-                        //         def_count_loc.offset == -1)
-                        // {
                             def_count_loc.line_num = line_num;
                             def_count_loc.offset = c_count - 1;
-                        // }
-
                     }
                     last_symbol_location.line_num = line_num;
                     last_symbol_location.offset = c_count-1;
@@ -400,7 +355,7 @@ int main(int argc, char *argv[])
                         }
                     }
 
-                    // Shouldn't need this much
+                    // Update last_symbol_location
                     last_symbol_location.line_num = line_num;
                     last_symbol_location.offset = c_count-1;
 
@@ -412,7 +367,6 @@ int main(int argc, char *argv[])
                         symbol_count--;
                         if (symbol_count == 0)
                         {
-                            // printf ("moving on to the next section.\n");
                             symbol_count = -1;
                             cur_section++;
                             cur_section = cur_section % 3;
@@ -421,8 +375,6 @@ int main(int argc, char *argv[])
                             if (cur_section == 0)
                             {
                                 cur_module++;
-                                // def_count_loc.line_num = -1;
-                                // def_count_loc.offset = -1;
                             }
                         }
                     }
@@ -449,10 +401,6 @@ int main(int argc, char *argv[])
                 {
                     // Something else should be printed here.
                     pass;
-                    // cout << "Parse Error line " << def_count_loc.line_num <<
-                    //     " offset " << def_count_loc.offset <<
-                    //     ": TO_MANY_DEF_IN_MODULE\n";
-                    // exit (1);
                 }
                 else
                 {
@@ -471,7 +419,6 @@ int main(int argc, char *argv[])
                         last_symbol_location.line_num <<
                         // line_num <<
                         " offset " << offset
-                        // " offset " << c_count - tmp_arr.length() + 1
                         << ": SYM_EXPECTED\n";
                     exit (1);
                 }
@@ -518,29 +465,14 @@ int main(int argc, char *argv[])
 
                  }
             }
-            // cout << "Input-16\n";
             printf ("Error: File ended before finishing a module\n");
             exit (1);
         }
         if (symbol_count != -1 || expect_symbol == 1)
         {
-            // Find where the fuck the wrong is.
             printf ("Input finished before sufficient symbols!\n");
         }
         fclose(ifp);
-
-        // Probably dont need this
-        // for(vector<Use_Count>::size_type i = 0; i != use_count_vec.size(); i++)
-        // {
-        //     if (use_count_vec[i].count > symbol_table.size())
-        //     {
-        //         cout << "Parse Error line " <<
-        //             use_count_vec[i].use_count_loc.line_num << " offset "
-        //             <<  use_count_vec[i].use_count_loc.offset <<
-        //             ": TO_MANY_USE_IN_MODULE\n";
-        //         exit (1);
-        //     }
-        // }
 
 	    for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
          	iter != symbol_table.end();
@@ -597,24 +529,17 @@ int main(int argc, char *argv[])
         int addr_counter = 0;
         int cur_module = 1;
 
-        // tmp array
         string tmp_arr;
 
         // use list
         vector<Use_Symbol> le_use_list;
-        // vector<Use_Symbol> unused_list;
-
-        // tmp storage
         char tmp_prog_txt;
 
         printf ("\nMemory Map\n");
-        // printf ("use count: %d\n", use_count);
         while ((c = getc(ifp)) != EOF)
         {
-            //printf ("%c", c);
             if (c != '\t' && c != '\n' && c != ' ')
             {
-                // printf ("c is %c\n", c);
                 fookin_delim = 0;
                 expect_symbol = 0;
 
@@ -622,7 +547,6 @@ int main(int argc, char *argv[])
                 {
                     // This would print as many times as the number of char
                     // in the section_counter
-                    // printf ("We are at section: %d\n", (int)cur_section);
                     tmp_arr+=c;
                 }
                 else
@@ -630,22 +554,15 @@ int main(int argc, char *argv[])
                     switch (cur_section)
                     {
                         case 0:
-                            // printf ("current c: %c\n", c);
-                            // printf ("section_counter is: %d\n"
-                            // , section_counter);
                             module_start = 1;
                             if (section_counter > 0 && symbol_count == -1 )
                             {
                                 // This many symbols before next section
                                 symbol_count = section_counter*2;
                             }
-                            // printf ("symbol_count is: %d\n", symbol_count);
                             tmp_arr+=c;
                             break;
                         case 1:
-                            // printf ("current c: %c\n", c);
-                            // printf ("section_counter is: %d\n", section_counter);
-                            // printf ("symbol_count is: %d\n", symbol_count);
                             if (section_counter > 0 && symbol_count == -1 )
                             {
                                 symbol_count = section_counter;
@@ -653,14 +570,12 @@ int main(int argc, char *argv[])
                             tmp_arr+=c;
                             break;
                         case 2:
-                            // printf ("section_counter is: %d\n", section_counter);
                             if (section_counter > 0 && symbol_count == -1 )
                             {
                                 symbol_count = section_counter * 2;
                                 base_address += prev_section_counter;
                                 prev_section_counter = section_counter;
                             }
-                            // printf ("symbol_count is: %d\n", symbol_count);
                             tmp_arr+=c;
                             break;
                         default:
@@ -690,15 +605,13 @@ int main(int argc, char *argv[])
                     section_counter = std::stoi (tmp_arr);
                     if (section_counter == 0)
                     {
-                        // printf ("Hitting zero\n");
+                        // Hitting zero
                         cur_section++;
                         cur_section = cur_section % 3;
                         section_counter = 0;
-                        // printf ("We are at section: %d\n", (int)cur_section);
                     }
                     else
                     {
-                        // printf ("section_counter is: %d\n", section_counter);
                         new_section = 0;
                     }
                     tmp_arr.clear();
@@ -710,29 +623,9 @@ int main(int argc, char *argv[])
                     // Specifics actions for passs2
                     if (cur_section == 1)
                     {
-						/*if ( symbol_table.find(tmp_arr
-						) != symbol_table.end() )
-						{
-                            le_use_list.push_back(tmp_arr);
-                        }
-                        else
-                        {// the thing going in use_list is not defined
-                            Use_Symbol rogue_symbol;
-                            rogue_symbol.set_values(tmp_arr, false, cur_module);
-                            undefined_list.push_back(rogue_symbol);
-                        }*/
-                        // Even if not in symbol table, still push to use_list;
-                        // Input-8 occurs when too much in use_list.
                         Use_Symbol a_use_symbol;
                         a_use_symbol.set_values(tmp_arr, false, cur_module, false);
                         le_use_list.push_back(a_use_symbol);
-                        /*
-                        if (symbol_table.size() < le_use_list.size())
-                        {
-                            Use_Symbol overflow_symbol;
-                            overflow_symbol.set_values(tmp_arr, false, cur_module, false);
-                            unused_list.push_back(overflow_symbol);
-                        }*/
                     }
                     if (cur_section == 2)
                     {
@@ -833,7 +726,6 @@ int main(int argc, char *argv[])
                             else if (tmp_prog_txt == 'A')
                             {
                                 result = stoi(tmp_arr);
-                                // cout << "result:" << result << endl;
                                 if ((result % 1000) > machine_size)
                                 {
                                     printf ("%04d ", (result/1000)*1000);
@@ -898,8 +790,6 @@ int main(int argc, char *argv[])
         if (module_start != 0 || cur_section != 0)
         {
             printf ("Error: File ended before finishing a module\n");
-            // cout << "Parse Error line " << line_num << " offset " << c_count << ": SYM_EXPECTED";
-            // exit (1);
         }
         if (symbol_count != -1 || expect_symbol == 1)
         {
@@ -910,12 +800,6 @@ int main(int argc, char *argv[])
         fclose(ifp);
 
         // Warning output
-        /*
-        for(vector<Use_Symbol>::size_type i = 0; i != unused_list.size(); i++) {
-            cout << "Warning: Module " << unused_list[i].defined_module <<
-                ": "<< unused_list[i].symbol_name <<" appeared in the uselist"
-                " but was not actually used\n";
-        }*/
         cout << endl << endl;
 	    for( std::map<string, Def_Symbol>::iterator iter = symbol_table.begin();
      	iter != symbol_table.end();
@@ -931,13 +815,6 @@ int main(int argc, char *argv[])
     else
     {
         fprintf (stderr, "Can't open file %s\n", input_file);
-        exit (1);
-    }
-
-    ofp = fopen (output_file, "w");
-    if (ofp == NULL)
-    {
-        fprintf (stderr, "can't write to file\n");
         exit (1);
     }
 }
