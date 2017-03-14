@@ -8,54 +8,11 @@
 #include <sstream>
 #include <vector>
 #include <iterator>
+#include "Process.h"
+
 
 using namespace std;
 
-class Process
-{
-	public:
-		Process(int at, int tc, int cb, int io, string stat);
-		int getAT(void);
-		int getTC(void);
-		int getCB(void);
-		int getIO(void);
-		string getState(void);
-	private:
-		int AT; // Arrival Time
-		int TC; // Total CPU Time
-		int CB; // CPU Burst
-		int IO; // IO Burst
-		string state;
-};
-
-int Process::getAT( void ) {
-   return AT;
-}
-
-int Process::getTC( void ) {
-   return TC;
-}
-
-int Process::getCB( void ) {
-   return CB;
-}
-
-int Process::getIO( void ) {
-   return IO;
-}
-
-string Process::getState( void ) {
-   return state;
-}
-
-Process::Process(int at, int tc, int cb, int io, string stat)
-{
-	AT = at;
-	TC = tc;
-	CB = cb;
-	IO = io;
-	state = stat;
-}
 /*
 int myrandom(int burst)
 {
@@ -104,6 +61,7 @@ int main(int argc, char *argv[])
     ifstream randFile;
 	inFile.open(argv[optind-1]);
 	randFile.open(argv[optind]);
+	randFile.open(argv[2]);
 	string line;
 	vector <Process> DES;
     while (!inFile.eof())
@@ -117,17 +75,18 @@ int main(int argc, char *argv[])
     		vector<string> tokens; // Create vector to hold our words
     		while (ss >> buf)
         		tokens.push_back(buf);
-			Process newProcess(stoi(tokens[0]), stoi(tokens[1]), stoi(tokens[2])
-			, stoi(tokens[3]), "CREATE");
+            Process newProcess(stoi(tokens[0]), stoi(tokens[1]), stoi(tokens[2])
+			 , stoi(tokens[3]), "CREATE");
 
-			DES.push_back(newProcess);
-
+			 DES.push_back(newProcess);
         }
     }
+
 	for (int i=0; i < DES.size(); i++)
 	{
 		cout << DES[i].getState() << endl;
 	}
+
 
 	inFile.close();
 
