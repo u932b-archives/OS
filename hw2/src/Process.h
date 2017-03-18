@@ -1,23 +1,39 @@
 #ifndef _PROCESS_H_
 #define _PROCESS_H_
-#include <string>
-using namespace std;
+// #include <string>
+# include "util.hpp"
+using namespace util;
 
 class Process
 {
 	public:
-		Process(int, int, int, int, string);
+		Process(int, int, int, int, int, STATE, int);
+		int getPID(void);
 		int getAT(void);
 		int getTC(void);
 		int getCB(void);
 		int getIO(void);
-		string getState(void);
+        STATE curr_state;
+        int rem_CPU_time;
+        int rem_burst;
+        int static_priority;
+        int dynamic_priority;
+        int FT; // Finishing Time
+        int TT; // Turnaround Time
+        int IT; // I/O Time
+        int CW; //CPU Waiting Time
+
+        int curr_burst_begin;
+        int curr_burst_duration;
+        int last_burst_duration;
+        int PosInQueue;
 	private:
+        int pId;
 		int AT; // Arrival Time
 		int TC; // Total CPU Time
 		int CB; // CPU Burst
 		int IO; // IO Burst
-		string state;
+
 };
 
 #endif
