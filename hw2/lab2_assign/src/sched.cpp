@@ -84,8 +84,9 @@ int get_next_event_time(deque<Event*> event_queue)
     }
 }
 
-void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum,
-				int* finish_time, int* io_time, int* last_io_end_time)
+void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
+// void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum,
+// 				int* finish_time, int* io_time, int* last_io_end_time)
 {
     CURRENT_RUNNING_PROCESS = nullptr;
     int CALL_SCHEDULER = false;
@@ -204,14 +205,14 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum,
                     TRANS_STATE::TRANS_TO_READY, STATE::BLOCK);
                 put_event(event_queue, newEvent);
 				// event_checker(event_queue, evt->transition);
-				if (CURRENT_TIME >= *last_io_end_time) {
-                    *io_time += curr_io;
-                    *last_io_end_time = CURRENT_TIME + curr_io;
+				if (CURRENT_TIME >= last_io_end_time) {
+                    io_time += curr_io;
+                    last_io_end_time = CURRENT_TIME + curr_io;
                 }
                 else {
-                    if (CURRENT_TIME + curr_io > *last_io_end_time) {
-                        *io_time += (CURRENT_TIME + curr_io - *last_io_end_time);
-                        *last_io_end_time = CURRENT_TIME + curr_io;
+                    if (CURRENT_TIME + curr_io > last_io_end_time) {
+                        io_time += (CURRENT_TIME + curr_io - last_io_end_time);
+                        last_io_end_time = CURRENT_TIME + curr_io;
                     }
                 }
                 // cout << "CURRENT_TIME when leaving block: " << CURRENT_TIME << endl;
@@ -233,7 +234,7 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum,
                 curr_process->FT = evt->TimeStamp;
                 CURRENT_RUNNING_PROCESS = nullptr;
 				// *finish_time = CURRENT_TIME;
-				*finish_time = evt->TimeStamp;
+				finish_time = evt->TimeStamp;
                 CALL_SCHEDULER = true;
                 break;
 
