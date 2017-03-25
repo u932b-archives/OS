@@ -31,7 +31,6 @@ int myrandom(int burst)
 {
     ofs = ofs % randvals.size();
     int to_return = 1 + (randvals[ofs] % burst);
-    // cout << to_return << endl;
     ofs++;
     return to_return;
 }
@@ -68,7 +67,6 @@ void put_event(deque<Event*>& event_queue, Event* newEvent)
         i++;
     }
 	// event_checker(event_queue);
-
 	// cout << "put "<< newEvent->pID << " in at location " << i << " in the event queue" << endl;
     event_queue.insert(event_queue.begin()+i, newEvent);
 	// event_checker(event_queue);
@@ -274,7 +272,7 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum,
     }
 }
 
-void result(int finish_time, int io_time)
+void result()
 {
 	int cpu_time = 0; // total cpu time
     int total_TT = 0;
@@ -299,7 +297,6 @@ void result(int finish_time, int io_time)
 
     printf("SUM: %d %.2lf %.2lf %.2lf %.2lf %.3lf\n",
        finish_time, cpu_util, io_util, average_TT, average_CW, throughput_number);
-
 }
 
 
@@ -311,9 +308,6 @@ int main(int argc, char *argv[])
     char *svalue = NULL;
     int c;
 	opterr = 0;
-	int index;
-	int io_time = 0;
-	int last_io_end_time = 0;
     string get_s;
 
     while ((c = getopt (argc, argv, "vs:")) != -1)
@@ -321,27 +315,13 @@ int main(int argc, char *argv[])
         switch (c)
         {
             case 'v':
-                // cout << "got v" << endl;
+                // cout << "verbose" << endl;
                 break;
             case 's':
                 get_s = optarg;
                 break;
-            /*
-			case '?':
-                cout << "got ?" << endl;
-       			if (optopt == 'c')
-       			   fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-       			else if (isprint (optopt))
-       			  fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-       			else
-       			  fprintf (stderr,
-       			           "Unknown option character `\\x%x'.\n",
-       			           optopt);
-       			return -1;
-            */
             default:
                 abort ();
-
         }
     }
 	ifstream inFile;
@@ -350,7 +330,6 @@ int main(int argc, char *argv[])
 	randFile.open(argv[optind+1]);
 	string line;
     deque <Event* > event_queue;
-	// vector <Process *> DES;
     int quantum = 10000;
 
     // get random
@@ -401,7 +380,6 @@ int main(int argc, char *argv[])
                                     event_queue.push_back(newEvent);
 	}
 
-
     char sched_type=get_s.at(0);
     Scheduler* scheduler;
     switch(sched_type)
@@ -430,7 +408,7 @@ int main(int argc, char *argv[])
             break;
     }
 
-    Simulation(scheduler, event_queue, quantum, &finish_time, &io_time, &last_io_end_time);
-    result(finish_time, io_time);
+    Simulation(scheduler, event_queue, quantum);
+    result();
 
 }
