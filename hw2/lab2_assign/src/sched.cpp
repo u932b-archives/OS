@@ -37,7 +37,8 @@ Event* get_event(deque<Event*>& event_queue)
 {
     if (event_queue.empty())
     {
-        return nullptr;
+        // return nullptr;
+        return NULL;
     }
     else
     {
@@ -85,7 +86,8 @@ int get_next_event_time(deque<Event*> event_queue)
 
 void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
 {
-    Process* CURRENT_RUNNING_PROCESS = nullptr;
+    Process* CURRENT_RUNNING_PROCESS = NULL;
+    // Process* CURRENT_RUNNING_PROCESS = nullptr;
     int CALL_SCHEDULER = false;
     Event* evt;
     while ( (evt = get_event(event_queue)) )
@@ -107,7 +109,8 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 }
                 else if (curr_process -> curr_state == STATE::RUNNING)
                 { //Number 5
-                    CURRENT_RUNNING_PROCESS = nullptr;
+                    CURRENT_RUNNING_PROCESS = NULL;
+                    // CURRENT_RUNNING_PROCESS = nullptr;
                     curr_process->dynamic_priority -= 1;
                 }
                 else if (curr_process -> curr_state == STATE::BLOCK)
@@ -175,7 +178,8 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
             case TRANS_STATE::TRANS_TO_BLOCK:
                 {
 				// cout << "TRANS_TO_BLOCK" << endl;
-                CURRENT_RUNNING_PROCESS = nullptr;
+                CURRENT_RUNNING_PROCESS = NULL;
+                // CURRENT_RUNNING_PROCESS = nullptr;
                 int curr_io;
                 curr_io = myrandom(curr_process->getIO());
                 curr_process->IT += curr_io;
@@ -203,7 +207,8 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 // cout << "TRANS_TO_DONE" << endl;
                 // curr_process->FT = CURRENT_TIME;
                 curr_process->FT = evt->TimeStamp;
-                CURRENT_RUNNING_PROCESS = nullptr;
+                CURRENT_RUNNING_PROCESS = NULL;
+                // CURRENT_RUNNING_PROCESS = nullptr;
 				// finish_time = CURRENT_TIME;
 				finish_time = evt->TimeStamp;
                 CALL_SCHEDULER = true;
@@ -224,17 +229,20 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 continue;
             }
             CALL_SCHEDULER = false;
-            if (CURRENT_RUNNING_PROCESS == nullptr)
+            // if (CURRENT_RUNNING_PROCESS == nullptr)
+            if (CURRENT_RUNNING_PROCESS == NULL)
             {
                 CURRENT_RUNNING_PROCESS = scheduler->get_next_process();
-                if (CURRENT_RUNNING_PROCESS == nullptr)
+                // if (CURRENT_RUNNING_PROCESS == nullptr)
+                if (CURRENT_RUNNING_PROCESS == NULL)
                 {
                     continue;
                 }
                 Event newEvent(CURRENT_RUNNING_PROCESS->getPID(), CURRENT_TIME,
                         TRANS_STATE::TRANS_TO_RUN, STATE::READY);
                 put_event(event_queue, &newEvent);
-                CURRENT_RUNNING_PROCESS = nullptr;
+                CURRENT_RUNNING_PROCESS = NULL;
+                // CURRENT_RUNNING_PROCESS = nullptr;
             }
         }
 
