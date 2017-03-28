@@ -27,10 +27,10 @@ class Process
         int enter_ready_time;
 
         int finishing_time;
-        int curr_burst_begin;
-        int curr_burst_duration;
-        int last_burst_duration;
-        int PosInQueue;
+        // int curr_burst_begin;
+        // int curr_burst_duration;
+        // int last_burst_duration;
+        // int PosInQueue;
 	private:
 		int AT; // Arrival Time
 		int CB; // CPU Burst
