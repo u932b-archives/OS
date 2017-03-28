@@ -22,8 +22,8 @@ class Process
 		int TC; // Total CPU Time
         int FT; // Finishing Time
         int TT; // Turnaround Time
-        int IT = 0; // I/O Time
-        int CW = 0; //CPU Waiting Time
+        int IT; // I/O Time
+        int CW; //CPU Waiting Time
         int enter_ready_time;
 
         int finishing_time;
