@@ -19,7 +19,6 @@ using namespace std;
 using namespace util;
 
 vector <int> randvals;
-Process* CURRENT_RUNNING_PROCESS = nullptr;
 int CURRENT_TIME = 0;
 int finish_time = 0;
 int io_time = 0;
@@ -85,34 +84,33 @@ int get_next_event_time(deque<Event*> event_queue)
 }
 
 void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
-// void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum,
-// 				int* finish_time, int* io_time, int* last_io_end_time)
 {
-    CURRENT_RUNNING_PROCESS = nullptr;
+    Process* CURRENT_RUNNING_PROCESS = nullptr;
     int CALL_SCHEDULER = false;
     Event* evt;
-    // while ( (evt = get_event(event_queue)) )
-    while ( !event_queue.empty() )
+    while ( (evt = get_event(event_queue)) )
     {
-		evt = get_event(event_queue);
 		if (evt->TimeStamp == -1)
 			break;
         Process* curr_process = processes[evt->pID];
 		// cout << "process in simulation:" << curr_process->pId << " remaining cpu time:" << curr_process->rem_CPU_time <<endl;
         CURRENT_TIME = evt->TimeStamp;
+        curr_process->curr_state = evt->cur_state;
         // cout << "CURRENT_TIME: " << CURRENT_TIME << endl;
         switch(evt->transition)
         {
             case TRANS_STATE::TRANS_TO_READY:
 				// cout << "TRANS_TO_READY" << endl;
-                if (curr_process->curr_state == STATE::CREATED)
+                if (curr_process -> curr_state == STATE::CREATED)
                 {//Number 1
+				    curr_process->enter_ready_time = CURRENT_TIME;
                 }
-                else if (curr_process->curr_state == STATE::RUNNING)
+                else if (curr_process -> curr_state == STATE::RUNNING)
                 { //Number 5
-
+                    CURRENT_RUNNING_PROCESS = nullptr;
+                    curr_process->dynamic_priority -= 1;
                 }
-                else if (curr_process->curr_state == STATE::BLOCK)
+                else if (curr_process -> curr_state == STATE::BLOCK)
                 { // Number 4
 					processes[curr_process->pId]->dynamic_priority =
 					processes[curr_process->pId]->static_priority-1;
@@ -124,12 +122,10 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
             case TRANS_STATE::TRANS_TO_RUN:
                 // Number 2
 				// cout << "TRANS_TO_RUN" << endl;
-				// cout << "running man:" << curr_process->getPID()  << endl;
-				// cout << curr_process->rem_CPU_time << endl;;
                 CURRENT_RUNNING_PROCESS = curr_process;
-				curr_process->CW += CURRENT_TIME - curr_process->enter_ready_time;
+				curr_process->CW += CURRENT_TIME - curr_process->enter_ready_time ;
 
-                int curr_burst ;
+                int curr_burst;
                 if (curr_process->rem_burst>0)
                 {
                     curr_burst = curr_process->rem_burst;
@@ -138,38 +134,27 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 {
                     curr_burst = myrandom(curr_process->getCB());
                 }
-				// cout << curr_burst << endl;;
 
                 if (curr_process->rem_CPU_time <= curr_burst)
                 {
                     // This process is gonna finish
-					// cout << "FINISHING process:" <<  curr_process->getPID() << endl;
-					// processes[curr_process->pId] -> p_cpu_time += curr_process->rem_CPU_time;
-
                     Event* newEvent = new Event(curr_process->getPID(),
-                            CURRENT_TIME+curr_process-> rem_CPU_time,
+                            CURRENT_TIME + curr_process-> rem_CPU_time,
                             TRANS_STATE::TRANS_TO_DONE, STATE::RUNNING);
                     put_event(event_queue, newEvent);
 
-                    // DONE
-                    // curr_process->FT = CURRENT_TIME + curr_process->rem_CPU_time;
-                    // curr_process->FT =
-                    //     evt->TimeStamp + curr_process->rem_CPU_time;
-                    // CURRENT_RUNNING_PROCESS = nullptr;
-					// *finish_time = evt->TimeStamp + curr_process->rem_CPU_time;
-                    // CALL_SCHEDULER = true;
-                    curr_process->rem_CPU_time = 0;
+                    curr_process->rem_CPU_time = -1;
                 }
                 else
                 {
                     // Number 3, going to IO
                     if (curr_burst <= quantum)
                     {
-						// curr_process->p_cpu_time += curr_burst;
                         curr_process->rem_CPU_time -= curr_burst;
                         curr_process->rem_burst = -1;
-                        Event* newEvent = new Event(curr_process->getPID(), CURRENT_TIME+curr_burst,
-                            TRANS_STATE::TRANS_TO_BLOCK, STATE::RUNNING);
+                        Event* newEvent = new Event(curr_process->getPID(),
+                                CURRENT_TIME+curr_burst,
+                                TRANS_STATE::TRANS_TO_BLOCK, STATE::RUNNING);
                         put_event(event_queue, newEvent);
                     }
                     else
@@ -177,20 +162,13 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                     {
 
                         curr_process->rem_burst = curr_burst - quantum;
-                    	//processes[curr_process->pId]->p_cpu_time += quantum;
                         curr_process->rem_CPU_time -= quantum;
 
                         Event* newEvent = new Event(curr_process->getPID(),
-                                CURRENT_TIME+quantum, TRANS_STATE::TRANS_TO_PREEMPT,
+                                CURRENT_TIME+quantum, TRANS_STATE::TRANS_TO_READY,
                                 STATE::RUNNING);
                         put_event(event_queue, newEvent);
 
-						// shameless copy from TRANS_TO_PREEMPT
-                        // CURRENT_RUNNING_PROCESS = nullptr;
-                        // curr_process->dynamic_priority -= 1;
-                        // scheduler->add_process(curr_process);
-                        // curr_process->enter_ready_time = CURRENT_TIME;
-                        // CALL_SCHEDULER = true;
                     }
                 }
                 break;
@@ -205,27 +183,20 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                     TRANS_STATE::TRANS_TO_READY, STATE::BLOCK);
                 put_event(event_queue, newEvent);
 				// event_checker(event_queue, evt->transition);
-				if (CURRENT_TIME >= last_io_end_time) {
+				if (CURRENT_TIME >= last_io_end_time)
+                {
                     io_time += curr_io;
                     last_io_end_time = CURRENT_TIME + curr_io;
                 }
-                else {
-                    if (CURRENT_TIME + curr_io > last_io_end_time) {
+                else if (CURRENT_TIME + curr_io > last_io_end_time)
+                {
                         io_time += (CURRENT_TIME + curr_io - last_io_end_time);
                         last_io_end_time = CURRENT_TIME + curr_io;
-                    }
                 }
                 // cout << "CURRENT_TIME when leaving block: " << CURRENT_TIME << endl;
                 CALL_SCHEDULER = true;
                 break;
                 }
-            case TRANS_STATE::TRANS_TO_PREEMPT:
-                 CURRENT_RUNNING_PROCESS = nullptr;
-                 curr_process->dynamic_priority -= 1;
-                 scheduler->add_process(curr_process);
-                 curr_process->enter_ready_time = CURRENT_TIME;
-                 CALL_SCHEDULER = true;
-                 break;
 
             case TRANS_STATE::TRANS_TO_DONE:
                 // CURRENT_TIME = CURRENT_TIME + curr_burst;
@@ -233,20 +204,17 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 // curr_process->FT = CURRENT_TIME;
                 curr_process->FT = evt->TimeStamp;
                 CURRENT_RUNNING_PROCESS = nullptr;
-				// *finish_time = CURRENT_TIME;
+				// finish_time = CURRENT_TIME;
 				finish_time = evt->TimeStamp;
                 CALL_SCHEDULER = true;
                 break;
 
-
-
-
             default:
                 break;
         }
-		if (evt){
+		if (evt)
+        {
 			// cout << evt->pID << endl;
-        	// delete (evt);
 		}
         if (CALL_SCHEDULER)
         {
@@ -309,7 +277,7 @@ int main(int argc, char *argv[])
     char *svalue = NULL;
     int c;
 	opterr = 0;
-    string get_s;
+    string param;
 
     while ((c = getopt (argc, argv, "vs:")) != -1)
     {
@@ -319,7 +287,7 @@ int main(int argc, char *argv[])
                 // cout << "verbose" << endl;
                 break;
             case 's':
-                get_s = optarg;
+                param = optarg;
                 break;
             default:
                 abort ();
@@ -359,7 +327,7 @@ int main(int argc, char *argv[])
             // cout << "Confirmation of data reading: " << line << endl;
 			string buf; // Have a buffer string
     		stringstream ss(line); // Insert the string into a stream
-    		vector<string> tokens; // Create vector to hold our words
+    		vector<string> tokens; // Create vector to hold words
     		while (ss >> buf)
         		tokens.push_back(buf);
             STATE state = STATE::CREATED;
@@ -381,7 +349,7 @@ int main(int argc, char *argv[])
                                     event_queue.push_back(newEvent);
 	}
 
-    char sched_type=get_s.at(0);
+    char sched_type = param.at(0);
     Scheduler* scheduler;
     switch(sched_type)
     {
@@ -395,11 +363,11 @@ int main(int argc, char *argv[])
             scheduler = new SJF();
             break;
         case 'R':
-            quantum = stoi(get_s.substr(1));
+            quantum = stoi(param.substr(1));
             scheduler = new RR();
             break;
         case 'P':
-            quantum = stoi(get_s.substr(1));
+            quantum = stoi(param.substr(1));
             scheduler = new PRIO();
             break;
 
