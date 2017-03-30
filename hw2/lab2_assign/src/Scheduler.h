@@ -49,16 +49,16 @@ class RR : public Scheduler {
 class PRIO : public Scheduler {
 public:
     // active queue
-    vector<Process*> aq0;
-    vector<Process*> aq1;
-    vector<Process*> aq2;
-    vector<Process*> aq3;
+    deque<Process*> aqueue0;
+    deque<Process*> aqueue1;
+    deque<Process*> aqueue2;
+    deque<Process*> aqueue3;
 
     // expried queue
-    vector<Process*> eq0;
-    vector<Process*> eq1;
-    vector<Process*> eq2;
-    vector<Process*> eq3;
+    deque<Process*> equeue0;
+    deque<Process*> equeue1;
+    deque<Process*> equeue2;
+    deque<Process*> equeue3;
 
     void add_process(Process *p);
 
