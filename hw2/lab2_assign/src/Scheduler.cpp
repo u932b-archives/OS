@@ -19,8 +19,12 @@ Process* FCFS::get_next_process()
     {
         process = run_queue.front();
         run_queue.pop_front();
+        return process;
     }
-    return process;
+    else
+    {
+        return 0;
+    }
 }
 
 void LCFS::add_process(Process *process) {
@@ -33,8 +37,12 @@ Process* LCFS::get_next_process() {
     if (!run_queue.empty()) {
         process = run_queue.front();
         run_queue.pop_front();
+        return process;
     }
-    return process;
+    else
+    {
+        return 0;
+    }
 }
 
 
@@ -56,8 +64,12 @@ Process* SJF::get_next_process() {
         }
         process = run_queue[min_index];
         run_queue.erase(run_queue.begin() + min_index);
+        return process;
     }
-    return process;
+    else
+    {
+        return 0;
+    }
 }
 
 //RR
@@ -71,8 +83,13 @@ Process* RR::get_next_process() {
     if (!run_queue.empty()) {
         process = run_queue.front();
         run_queue.pop_front();
+        return process;
     }
-    return process;
+    else
+    {
+        return 0;
+    }
+
 }
 
 void PRIO::add_process(Process *process) {
@@ -157,6 +174,10 @@ Process* PRIO::get_next_process() {
             process = aqueue0.front();
             aqueue0.pop_front();
         }
+        return process;
     }
-    return process;
+    else
+    {
+        return 0;
+    }
 }
