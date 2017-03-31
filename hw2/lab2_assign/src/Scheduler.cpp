@@ -16,7 +16,7 @@ Process* FCFS::get_next_process()
     // Process *process = nullptr;
     if (!run_queue.empty())
     {
-        Process *process = 0;
+        Process *process;
         process = run_queue.front();
         run_queue.pop_front();
         return process;
@@ -34,7 +34,7 @@ void LCFS::add_process(Process *process) {
 Process* LCFS::get_next_process() {
     // Process *process = nullptr;
     if (!run_queue.empty()) {
-        Process *process = 0;
+        Process *process ;
         process = run_queue.front();
         run_queue.pop_front();
         return process;
@@ -53,7 +53,7 @@ void SJF::add_process(Process *process) {
 Process* SJF::get_next_process() {
     // Process *process = nullptr;
     if (!run_queue.empty()) {
-        Process *process = 0;
+        Process *process;
         int min = run_queue[0]->rem_CPU_time;
         int min_index = 0;
         for (int i=0; i < run_queue.size(); i++) {
@@ -80,7 +80,7 @@ void RR::add_process(Process *process) {
 Process* RR::get_next_process() {
     // Process *process = nullptr;
     if (!run_queue.empty()) {
-        Process *process = 0;
+        Process *process;
         process = run_queue.front();
         run_queue.pop_front();
         return process;
@@ -150,7 +150,7 @@ bool PRIO::isActiveQueueEmpty() {
 }
 Process* PRIO::get_next_process() {
     // Process* process = nullptr;
-    Process* process = 0;
+    Process* process ;
     if (!isAllEmpty()) {
         if (isActiveQueueEmpty()) {
             aqueue0.swap(equeue0);
