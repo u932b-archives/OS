@@ -1,2 +1,2 @@
 all:
-	g++48 -std=c++11 *.cpp util.hpp -o sched 
+	g++ -std=c++0x *.cpp util.hpp -o sched
