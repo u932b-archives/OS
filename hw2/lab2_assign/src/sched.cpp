@@ -31,6 +31,7 @@ int myrandom(int burst)
     ofs = ofs % randvals.size();
     int to_return = 1 + (randvals[ofs] % burst);
     ofs++;
+    cout << "random: " << to_return << endl;
     return to_return;
 }
 Event* get_event(deque<Event*>& event_queue)
@@ -136,6 +137,7 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 else
                 {
                     curr_burst = myrandom(curr_process->getCB());
+                    cout << "random is " << curr_burst << endl;
                 }
 
                 if (curr_process->rem_CPU_time <= curr_burst)
@@ -182,6 +184,7 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 // CURRENT_RUNNING_PROCESS = nullptr;
                 int curr_io;
                 curr_io = myrandom(curr_process->getIO());
+                    cout << "random is " << curr_io << endl;
 		cout << "adding IO" << endl;
                 curr_process->IT += curr_io;
                 Event* newEvent = new Event(curr_process->getPID(), CURRENT_TIME + curr_io,
