@@ -238,11 +238,14 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 {
                     continue;
                 }
-                Event newEvent(CURRENT_RUNNING_PROCESS->getPID(), CURRENT_TIME,
-                        TRANS_STATE::TRANS_TO_RUN, STATE::READY);
-                put_event(event_queue, &newEvent);
-                CURRENT_RUNNING_PROCESS = 0;
-                // CURRENT_RUNNING_PROCESS = nullptr;
+                else
+                {
+                    Event newEvent(CURRENT_RUNNING_PROCESS->getPID(), CURRENT_TIME,
+                            TRANS_STATE::TRANS_TO_RUN, STATE::READY);
+                    put_event(event_queue, &newEvent);
+                    CURRENT_RUNNING_PROCESS = 0;
+                    // CURRENT_RUNNING_PROCESS = nullptr;
+                }
             }
         }
 
