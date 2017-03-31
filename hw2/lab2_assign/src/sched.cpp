@@ -238,6 +238,7 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 // if (CURRENT_RUNNING_PROCESS == nullptr)
                 if (CURRENT_RUNNING_PROCESS == 0)
                 {
+                    cout << "no running process" << endl;
                     continue;
                 }
                 else
