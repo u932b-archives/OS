@@ -6,7 +6,7 @@ using namespace util;
 
 Process::Process(int pid, int at, int tc, int cb, int io, STATE stat, int prio)
     : pId(pid), AT(at), TC(tc), CB(cb), IO(io), curr_state(stat),
-    rem_CPU_time(tc), static_priority(prio), dynamic_priority(prio-1), enter_ready_time(at), IT(0), CW(0)
+    rem_CPU_time(tc), static_priority(prio), dynamic_priority(prio-1), enter_ready_time(at), IT(0), CW(0), rem_burst(0)
 {}
 
 int Process::getPID( void ) {
