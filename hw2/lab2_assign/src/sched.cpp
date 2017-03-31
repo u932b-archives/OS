@@ -31,7 +31,7 @@ int myrandom(int burst)
     ofs = ofs % randvals.size();
     int to_return = 1 + (randvals[ofs] % burst);
     ofs++;
-    cout << "random: " << to_return << endl;
+    // cout << "random: " << to_return << endl;
     return to_return;
 }
 Event* get_event(deque<Event*>& event_queue)
@@ -96,14 +96,14 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
 		if (evt->TimeStamp == -1)
 			break;
         Process* curr_process = processes[evt->pID];
-		cout << "process in simulation:" << curr_process->pId << " remaining cpu time:" << curr_process->rem_CPU_time <<endl;
+		// cout << "process in simulation:" << curr_process->pId << " remaining cpu time:" << curr_process->rem_CPU_time <<endl;
         CURRENT_TIME = evt->TimeStamp;
         curr_process->curr_state = evt->cur_state;
-        cout << "CURRENT_TIME: " << CURRENT_TIME << endl;
+        // cout << "CURRENT_TIME: " << CURRENT_TIME << endl;
         switch(evt->transition)
         {
             case TRANS_STATE::TRANS_TO_READY:
-				cout << "TRANS_TO_READY" << endl;
+				// cout << "TRANS_TO_READY" << endl;
                 if (curr_process -> curr_state == STATE::CREATED)
                 {//Number 1
 				    curr_process->enter_ready_time = CURRENT_TIME;
@@ -125,7 +125,7 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 break;
             case TRANS_STATE::TRANS_TO_RUN:
                 // Number 2
-				cout << "TRANS_TO_RUN" << endl;
+				// cout << "TRANS_TO_RUN" << endl;
                 CURRENT_RUNNING_PROCESS = curr_process;
 				curr_process->CW += CURRENT_TIME - curr_process->enter_ready_time ;
 
@@ -137,7 +137,7 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 else
                 {
                     curr_burst = myrandom(curr_process->getCB());
-                    cout << "random is " << curr_burst << endl;
+                    // cout << "random is " << curr_burst << endl;
                 }
 
                 if (curr_process->rem_CPU_time <= curr_burst)
@@ -179,13 +179,13 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 break;
             case TRANS_STATE::TRANS_TO_BLOCK:
                 {
-				cout << "TRANS_TO_BLOCK" << endl;
+				// cout << "TRANS_TO_BLOCK" << endl;
                 CURRENT_RUNNING_PROCESS = 0;
                 // CURRENT_RUNNING_PROCESS = nullptr;
                 int curr_io;
                 curr_io = myrandom(curr_process->getIO());
-                    cout << "random is " << curr_io << endl;
-		cout << "adding IO" << endl;
+                    // cout << "random is " << curr_io << endl;
+		// cout << "adding IO" << endl;
                 curr_process->IT += curr_io;
                 Event* newEvent = new Event(curr_process->getPID(), CURRENT_TIME + curr_io,
                     TRANS_STATE::TRANS_TO_READY, STATE::BLOCK);
@@ -201,14 +201,14 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                         io_time += (CURRENT_TIME + curr_io - last_io_end_time);
                         last_io_end_time = CURRENT_TIME + curr_io;
                 }
-                cout << "CURRENT_TIME when leaving block: " << CURRENT_TIME << endl;
+                // cout << "CURRENT_TIME when leaving block: " << CURRENT_TIME << endl;
                 CALL_SCHEDULER = true;
                 break;
                 }
 
             case TRANS_STATE::TRANS_TO_DONE:
                 // CURRENT_TIME = CURRENT_TIME + curr_burst;
-                cout << "TRANS_TO_DONE" << endl;
+                // cout << "TRANS_TO_DONE" << endl;
                 // curr_process->FT = CURRENT_TIME;
                 curr_process->FT = evt->TimeStamp;
                 CURRENT_RUNNING_PROCESS = 0;
@@ -227,7 +227,7 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
 		}
         if (CALL_SCHEDULER)
         {
-            cout << "CALLING SCHEDULER" << endl;
+            // cout << "CALLING SCHEDULER" << endl;
             if (get_next_event_time(event_queue) == CURRENT_TIME)
             {
                 continue;
@@ -236,12 +236,12 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
             // if (CURRENT_RUNNING_PROCESS == nullptr)
             if (CURRENT_RUNNING_PROCESS == 0)
             {
-		cout << "get next process" << endl;
+		// cout << "get next process" << endl;
                 CURRENT_RUNNING_PROCESS = scheduler->get_next_process();
                 // if (CURRENT_RUNNING_PROCESS == nullptr)
                 if (CURRENT_RUNNING_PROCESS == 0)
                 {
-                    cout << "no running process" << endl;
+                    // cout << "no running process" << endl;
                     continue;
                 }
                 else
