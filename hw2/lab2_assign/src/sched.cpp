@@ -142,6 +142,11 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
 
                 if (curr_process->rem_CPU_time <= curr_burst)
                 {
+                    curr_burst = curr_process->rem_CPU_time;
+                }
+
+                if (curr_process->rem_CPU_time <= curr_burst)
+                {
                     // This process is gonna finish
                     Event* newEvent = new Event(curr_process->getPID(),
                             CURRENT_TIME + curr_process-> rem_CPU_time,
@@ -258,14 +263,14 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
     }
 }
 
-void result(string sched_name, int num)
+void result(string sched_name, int quantum)
 {
 	int cpu_time = 0; // total cpu time
     int total_TT = 0;
     int total_CW = 0;
-    if (num > 0)
+    if (quantum != 10000)
     {
-        printf("%s %d\n", sched_name.c_str(), num);
+        printf("%s %d\n", sched_name.c_str(), quantum);
     }
     else
     {
@@ -377,7 +382,6 @@ int main(int argc, char *argv[])
     char sched_type = param.at(0);
     Scheduler* scheduler;
     string sched_name;
-    int num;
     switch(sched_type)
     {
         case 'F':
@@ -410,6 +414,6 @@ int main(int argc, char *argv[])
     }
 
     Simulation(scheduler, event_queue, quantum);
-    result(sched_name, num=0);
+    result(sched_name, quantum);
 
 }
