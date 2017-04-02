@@ -263,7 +263,7 @@ void result(string sched_name)
 	int cpu_time = 0; // total cpu time
     int total_TT = 0;
     int total_CW = 0;
-    cout << sched_name << endl;
+    printf("%s\n", sched_name.c_str());
     for (int i=0; i < processes.size(); i++)
     {
 	cpu_time += processes[i]->getTC();
