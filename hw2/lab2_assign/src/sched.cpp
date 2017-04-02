@@ -258,12 +258,19 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
     }
 }
 
-void result(string sched_name)
+void result(string sched_name, int num)
 {
 	int cpu_time = 0; // total cpu time
     int total_TT = 0;
     int total_CW = 0;
-    printf("%s\n", sched_name.c_str());
+    if (num > 0)
+    {
+        printf("%s %d\n", sched_name.c_str(), num);
+    }
+    else
+    {
+        printf("%s\n", sched_name.c_str());
+    }
     for (int i=0; i < processes.size(); i++)
     {
 	cpu_time += processes[i]->getTC();
@@ -370,6 +377,7 @@ int main(int argc, char *argv[])
     char sched_type = param.at(0);
     Scheduler* scheduler;
     string sched_name;
+    int num;
     switch(sched_type)
     {
         case 'F':
@@ -402,6 +410,6 @@ int main(int argc, char *argv[])
     }
 
     Simulation(scheduler, event_queue, quantum);
-    result(sched_name);
+    result(sched_name, num=0);
 
 }
