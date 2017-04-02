@@ -258,11 +258,12 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
     }
 }
 
-void result()
+void result(string sched_name)
 {
 	int cpu_time = 0; // total cpu time
     int total_TT = 0;
     int total_CW = 0;
+    cout << sched_name << endl;
     for (int i=0; i < processes.size(); i++)
     {
 	cpu_time += processes[i]->getTC();
@@ -368,22 +369,28 @@ int main(int argc, char *argv[])
 
     char sched_type = param.at(0);
     Scheduler* scheduler;
+    string sched_name;
     switch(sched_type)
     {
         case 'F':
+            sched_name = "FCFS";
             scheduler = new FCFS();
             break;
         case 'L':
+            sched_name = "LCFS";
             scheduler = new LCFS();
             break;
         case 'S':
+            sched_name = "SJF";
             scheduler = new SJF();
             break;
         case 'R':
+            sched_name = "RR";
             quantum = stoi(param.substr(1));
             scheduler = new RR();
             break;
         case 'P':
+            sched_name = "PRIO";
             quantum = stoi(param.substr(1));
             scheduler = new PRIO();
             break;
@@ -395,6 +402,6 @@ int main(int argc, char *argv[])
     }
 
     Simulation(scheduler, event_queue, quantum);
-    result();
+    result(sched_name);
 
 }
