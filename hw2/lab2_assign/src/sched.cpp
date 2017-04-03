@@ -123,6 +123,7 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 scheduler->add_process(curr_process);
                 CALL_SCHEDULER = true;
                 break;
+
             case TRANS_STATE::TRANS_TO_RUN:
                 // Number 2
 				// cout << "TRANS_TO_RUN" << endl;
@@ -171,7 +172,6 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 else
                 // Number 5 on the state diagram, Preemption
                 {
-
                     curr_process->rem_burst = curr_burst - quantum;
                     curr_process->rem_CPU_time -= quantum;
 
@@ -182,6 +182,7 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
 
                 }
                 break;
+
             case TRANS_STATE::TRANS_TO_BLOCK:
                 {
 				// cout << "TRANS_TO_BLOCK" << endl;
