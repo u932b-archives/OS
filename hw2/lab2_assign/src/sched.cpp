@@ -145,20 +145,20 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                     curr_burst = curr_process->rem_CPU_time;
                 }
 
-                if (curr_process->rem_CPU_time <= curr_burst)
-                {
-                    // This process is gonna finish
-                    Event* newEvent = new Event(curr_process->getPID(),
-                            CURRENT_TIME + curr_process-> rem_CPU_time,
-                            TRANS_STATE::TRANS_TO_DONE, STATE::RUNNING);
-                    put_event(event_queue, newEvent);
-
-                    curr_process->rem_CPU_time = -1;
-                }
-                else
-                {
                     // Number 3, going to IO
-                    if (curr_burst <= quantum)
+                if (curr_burst <= quantum)
+                {
+                    if (curr_process->rem_CPU_time <= curr_burst)
+                    {
+                        // This process is gonna finish
+                        Event* newEvent = new Event(curr_process->getPID(),
+                                CURRENT_TIME + curr_process-> rem_CPU_time,
+                                TRANS_STATE::TRANS_TO_DONE, STATE::RUNNING);
+                        put_event(event_queue, newEvent);
+
+                        curr_process->rem_CPU_time = -1;
+                    }
+                    else
                     {
                         curr_process->rem_CPU_time -= curr_burst;
                         curr_process->rem_burst = -1;
@@ -167,19 +167,19 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                                 TRANS_STATE::TRANS_TO_BLOCK, STATE::RUNNING);
                         put_event(event_queue, newEvent);
                     }
-                    else
-                    // Number 5 on the state diagram, Preemption
-                    {
+                }
+                else
+                // Number 5 on the state diagram, Preemption
+                {
 
-                        curr_process->rem_burst = curr_burst - quantum;
-                        curr_process->rem_CPU_time -= quantum;
+                    curr_process->rem_burst = curr_burst - quantum;
+                    curr_process->rem_CPU_time -= quantum;
 
-                        Event* newEvent = new Event(curr_process->getPID(),
-                                CURRENT_TIME+quantum, TRANS_STATE::TRANS_TO_READY,
-                                STATE::RUNNING);
-                        put_event(event_queue, newEvent);
+                    Event* newEvent = new Event(curr_process->getPID(),
+                            CURRENT_TIME+quantum, TRANS_STATE::TRANS_TO_READY,
+                            STATE::RUNNING);
+                    put_event(event_queue, newEvent);
 
-                    }
                 }
                 break;
             case TRANS_STATE::TRANS_TO_BLOCK:
