@@ -145,19 +145,7 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                     curr_burst = curr_process->rem_CPU_time;
                 }
 
-                if (curr_burst > quantum)
-                {
-
-                    curr_process->rem_burst = curr_burst - quantum;
-                    curr_process->rem_CPU_time -= quantum;
-
-                    Event* newEvent = new Event(curr_process->getPID(),
-                            CURRENT_TIME+quantum, TRANS_STATE::TRANS_TO_READY,
-                            STATE::RUNNING);
-                    put_event(event_queue, newEvent);
-
-                }
-                else if (curr_process->rem_CPU_time <= curr_burst)
+                if (curr_process->rem_CPU_time <= curr_burst)
                 {
                     // This process is gonna finish
                     Event* newEvent = new Event(curr_process->getPID(),
@@ -169,12 +157,29 @@ void Simulation(Scheduler* scheduler, deque<Event* >& event_queue, int quantum)
                 }
                 else
                 {
+                    // Number 3, going to IO
+                    if (curr_burst <= quantum)
+                    {
                         curr_process->rem_CPU_time -= curr_burst;
                         curr_process->rem_burst = -1;
                         Event* newEvent = new Event(curr_process->getPID(),
                                 CURRENT_TIME+curr_burst,
                                 TRANS_STATE::TRANS_TO_BLOCK, STATE::RUNNING);
                         put_event(event_queue, newEvent);
+                    }
+                    else
+                    // Number 5 on the state diagram, Preemption
+                    {
+
+                        curr_process->rem_burst = curr_burst - quantum;
+                        curr_process->rem_CPU_time -= quantum;
+
+                        Event* newEvent = new Event(curr_process->getPID(),
+                                CURRENT_TIME+quantum, TRANS_STATE::TRANS_TO_READY,
+                                STATE::RUNNING);
+                        put_event(event_queue, newEvent);
+
+                    }
                 }
                 break;
             case TRANS_STATE::TRANS_TO_BLOCK:
