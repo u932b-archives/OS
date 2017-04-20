@@ -401,8 +401,9 @@ class AGE_PHYS: public Pager{
             //pte* smallest_pte = frametable[0].pte_ptr;
             pte* smallest_pte = &initial_pte;
 
-            /*
+
             for (int i=0; i<frametable.size(); i++)
+            {
                 for (int j = 32-1; j >= 0; j--) {
         	 		if (smallest_pte->age_bit_vector[j] && !frametable[i].pte_ptr->age_bit_vector[j])
 			 		{
@@ -411,14 +412,14 @@ class AGE_PHYS: public Pager{
                          break;
                      }
 
-        	 		else if (!smallest_pte->age_bit_vector[i] && frametable[i].pte_ptr->age_bit_vector[j])
+        	 		else if (!smallest_pte->age_bit_vector[j] && frametable[i].pte_ptr->age_bit_vector[j])
 			 		{
                          break;
 			 		}
 
     		 	}
-            }*/
-
+            }
+            /*
             for (int i=0; i<pagetable.size();i++)
             {
                 pte *curr_pte = &pagetable[i];
@@ -449,6 +450,7 @@ class AGE_PHYS: public Pager{
                     }
                 }
             }
+            */
             // cout << "min_pte = " << smallest_pte->idx << " age=" << smallest_pte->age_bit_vector << endl;
             frame_to_replace->pte_ptr->PRESENT = 0;
             frame_to_replace->pte_ptr->age_bit_vector = 0;
