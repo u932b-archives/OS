@@ -5,6 +5,8 @@
 # include <vector>
 # include <sstream>
 # include <iomanip>
+#include <bitset>
+
 
 using namespace std;
 vector <int> randvals;
@@ -21,6 +23,8 @@ struct pte
     int PAGEDOUT:1;
     int idx:8;
     int frame_index:8;
+    // vector <bool> age_bit_vector;
+    bitset<32> age_bit_vector;
 };
 
 class stats
@@ -374,7 +378,85 @@ class AGE_PHYS: public Pager{
         frame* allocate_frame(frame* frame_old, stats* stat, bool output)
         {
 
-            frame* frame_to_replace;
+            for (int i=0; i<pagetable.size();i++)
+            {
+                pte *curr_pte = &pagetable[i];
+                //pte *curr_pte = frametable[i].pte_ptr;
+                if (curr_pte->PRESENT != 0)
+                //if (curr_pte->REFERENCED != 0 && curr_pte->PRESENT != 0)
+                {
+                    curr_pte->age_bit_vector = curr_pte->age_bit_vector >> 1;
+                    if (curr_pte->REFERENCED != 0)
+                    {
+                        curr_pte->age_bit_vector.flip(31);
+                        curr_pte->REFERENCED=0;
+                    }
+                    // cout << curr_pte->idx << ":" << curr_pte->age_bit_vector << endl;
+                }
+            }
+            frame* frame_to_replace = &frametable[0];
+            bitset<32> tmp(std::string("11111111111111111111111111111111"));
+
+            pte initial_pte = {0, 0, 0, 0, -1, 0, tmp};
+            //pte* smallest_pte = frametable[0].pte_ptr;
+            pte* smallest_pte = &initial_pte;
+
+            /*
+            for (int i=0; i<frametable.size(); i++)
+                for (int j = 32-1; j >= 0; j--) {
+        	 		if (smallest_pte->age_bit_vector[j] && !frametable[i].pte_ptr->age_bit_vector[j])
+			 		{
+                         smallest_pte = frametable[i].pte_ptr;
+                         frame_to_replace = &frametable[i];
+                         break;
+                     }
+
+        	 		else if (!smallest_pte->age_bit_vector[i] && frametable[i].pte_ptr->age_bit_vector[j])
+			 		{
+                         break;
+			 		}
+
+    		 	}
+            }*/
+
+            for (int i=0; i<pagetable.size();i++)
+            {
+                pte *curr_pte = &pagetable[i];
+                if (curr_pte->PRESENT != 0)
+                {
+                    // cout << i << endl;
+                    bool break_flag = false;
+                    for (int j = 32-1; j >= 0; j--)
+                    {
+                        if (!break_flag){
+        	 		    if (smallest_pte->age_bit_vector[j] && !pagetable[i].age_bit_vector[j])
+			 		    {
+                            // cout << "replacing smallest:" << smallest_pte->idx << " with " << pagetable[i].idx << endl;
+                             smallest_pte = &pagetable[i];
+                             frame_to_replace = &frametable[pagetable[i].frame_index];
+                             // continue;
+                             // break;
+                             break_flag = true;
+                         }
+
+        	 		    else if (!smallest_pte->age_bit_vector[j] && pagetable[i].age_bit_vector[j])
+			 		    {
+                             // continue;
+                             //break;
+                             break_flag = true;
+                        }
+                        }
+                    }
+                }
+            }
+            // cout << "min_pte = " << smallest_pte->idx << " age=" << smallest_pte->age_bit_vector << endl;
+            frame_to_replace->pte_ptr->PRESENT = 0;
+            frame_to_replace->pte_ptr->age_bit_vector = 0;
+            UNMAP(frame_to_replace, stat, output);
+            if (frame_to_replace->pte_ptr->MODIFIED != 0)
+            {
+                OUT(frame_to_replace, stat, output);
+            }
             return frame_to_replace;
         }
 };
@@ -383,7 +465,84 @@ class AGE_VIRTUAL: public Pager{
     public:
         frame* allocate_frame(frame* frame_old, stats* stat, bool output)
         {
-            frame* frame_to_replace;
+            for (int i=0; i<pagetable.size();i++)
+            {
+                pte *curr_pte = &pagetable[i];
+                //pte *curr_pte = frametable[i].pte_ptr;
+                if (curr_pte->PRESENT != 0)
+                //if (curr_pte->REFERENCED != 0 && curr_pte->PRESENT != 0)
+                {
+                    curr_pte->age_bit_vector = curr_pte->age_bit_vector >> 1;
+                    if (curr_pte->REFERENCED != 0)
+                    {
+                        curr_pte->age_bit_vector.flip(31);
+                        curr_pte->REFERENCED=0;
+                    }
+                    // cout << curr_pte->idx << ":" << curr_pte->age_bit_vector << endl;
+                }
+            }
+            frame* frame_to_replace = &frametable[0];
+            bitset<32> tmp(std::string("11111111111111111111111111111111"));
+
+            pte initial_pte = {0, 0, 0, 0, -1, 0, tmp};
+            //pte* smallest_pte = frametable[0].pte_ptr;
+            pte* smallest_pte = &initial_pte;
+            /*
+            for (int i=0; i<frametable.size(); i++)
+                for (int j = 32-1; j >= 0; j--) {
+        	 		if (smallest_pte->age_bit_vector[j] && !frametable[i].pte_ptr->age_bit_vector[j])
+			 		{
+                         smallest_pte = frametable[i].pte_ptr;
+                         frame_to_replace = &frametable[i];
+                         break;
+                     }
+
+        	 		else if (!smallest_pte->age_bit_vector[i] && frametable[i].pte_ptr->age_bit_vector[j])
+			 		{
+                         break;
+			 		}
+
+    		 	}
+            }*/
+
+            for (int i=0; i<pagetable.size();i++)
+            {
+                pte *curr_pte = &pagetable[i];
+                if (curr_pte->PRESENT != 0)
+                {
+                    // cout << i << endl;
+                    bool break_flag = false;
+                    for (int j = 32-1; j >= 0; j--)
+                    {
+                        if (!break_flag){
+        	 		    if (smallest_pte->age_bit_vector[j] && !pagetable[i].age_bit_vector[j])
+			 		    {
+                            // cout << "replacing smallest:" << smallest_pte->idx << " with " << pagetable[i].idx << endl;
+                             smallest_pte = &pagetable[i];
+                             frame_to_replace = &frametable[pagetable[i].frame_index];
+                             // continue;
+                             // break;
+                             break_flag = true;
+                         }
+
+        	 		    else if (!smallest_pte->age_bit_vector[j] && pagetable[i].age_bit_vector[j])
+			 		    {
+                             // continue;
+                             //break;
+                             break_flag = true;
+                        }
+                        }
+                    }
+                }
+            }
+            // cout << "min_pte = " << smallest_pte->idx << " age=" << smallest_pte->age_bit_vector << endl;
+            frame_to_replace->pte_ptr->PRESENT = 0;
+            frame_to_replace->pte_ptr->age_bit_vector = 0;
+            UNMAP(frame_to_replace, stat, output);
+            if (frame_to_replace->pte_ptr->MODIFIED != 0)
+            {
+                OUT(frame_to_replace, stat, output);
+            }
             return frame_to_replace;
         }
 };
