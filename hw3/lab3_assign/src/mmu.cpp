@@ -90,6 +90,7 @@ void MAP(pte *curr_pte, frame* curr_frame, stats* stat, bool output)
     curr_pte->PRESENT = 1;
     curr_pte->REFERENCED = 1;
     curr_frame->pte_ptr = curr_pte;
+    curr_pte->frame_index = curr_frame->page_index;
     fifo_queue.push_back(curr_frame->page_index);
 }
 
@@ -310,12 +311,12 @@ class CLOCK_VIRTUAL: public Pager{
                 }
                 else
                 {
-                    cout << "found pte:" << curr_pte->idx << endl;
-                    cout << "PRESENT:" << curr_pte->PRESENT << endl;
-                    cout << "REFERENCED:" << curr_pte->REFERENCED << endl;
-                    cout << "pointing to frame:" << curr_pte->frame_index << endl;
+                    // cout << "found pte:" << curr_pte->idx << endl;
+                    // cout << "PRESENT:" << curr_pte->PRESENT << endl;
+                    // cout << "REFERENCED:" << curr_pte->REFERENCED << endl;
+                    // cout << "pointing to frame:" << curr_pte->frame_index << endl; // this is wrong
                     frame_to_replace = &frametable[curr_pte->frame_index];
-                    cout << "frame_to_replace's pte_ptr:" << frame_to_replace->pte_ptr->idx << endl;
+                    // cout << "frame_to_replace's pte_ptr:" << frame_to_replace->pte_ptr->idx << endl;
                     break;
                 }
 
