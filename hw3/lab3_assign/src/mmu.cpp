@@ -50,7 +50,8 @@ class frame
 frame::frame(int idx)
 {
     page_index = idx;
-    pte_ptr = nullptr;
+    pte_ptr = 0;
+    //pte_ptr = nullptr;
 }
 
 
@@ -115,7 +116,8 @@ void ZERO(frame* curr_frame, stats* stat, bool output)
         cout << inst_count << ": ZERO"<< setw(9) << setfill(' ') << curr_frame->page_index << endl;
     }
     stat->zeros++;
-    if (curr_pte != NULL || curr_pte != nullptr)
+    if (curr_pte != NULL)
+    // if (curr_pte != NULL || curr_pte != nullptr)
     {
         // curr_pte->PRESENT = 0;
         // curr_pte->PAGEDOUT = 0;
@@ -168,7 +170,8 @@ class RANDOM : public Pager{
         frame* allocate_frame(frame* frame_old, stats* stat, int framesize, bool output)
         {
             frame* frame_to_replace = new frame(-1);
-            while (frame_to_replace->pte_ptr == nullptr||frame_to_replace->pte_ptr == NULL )
+            while (frame_to_replace->pte_ptr == NULL )
+            // while (frame_to_replace->pte_ptr == nullptr||frame_to_replace->pte_ptr == NULL )
             {
                 int index = myrandom(framesize);
                 // cout << index << endl;
@@ -237,7 +240,8 @@ class NRU : public Pager{
             }
 
             int class_counter = 0;
-            while (class_counter<4 && frame_to_replace->pte_ptr == nullptr)
+            while (class_counter<4 && frame_to_replace->pte_ptr == 0)
+            // while (class_counter<4 && frame_to_replace->pte_ptr == nullptr)
             {
                 curr_class = nru_table[class_counter];
                 //cout << curr_class->size() << endl;
@@ -656,7 +660,8 @@ frame* allocate_from_free_list()
 {
     if (freelist.empty())
     {
-        return nullptr;
+        return 0;
+        // return nullptr;
     }
     frame* frame_to_return = freelist.front();
     freelist.erase (freelist.begin());
@@ -668,7 +673,8 @@ frame* get_frame(frame* old_frame, stats* stat, string alg, int framesize, bool 
 {
     frame* _frame = allocate_from_free_list();
 
-    if (_frame == nullptr)
+    if (_frame == 0)
+    // if (_frame == nullptr)
     {
         // no free frames, got to get old frames
         if (alg == "f")
