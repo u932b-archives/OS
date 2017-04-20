@@ -11,6 +11,7 @@ vector <int> randvals;
 int inst_count = 0;
 
 int hand=0;
+int pagedout_counter=0;
 
 struct pte
 {
@@ -190,28 +191,44 @@ class NRU : public Pager{
         vector <vector<int>*> nru_table = {&class_0, &class_1, &class_2, &class_3};
         frame* allocate_frame(frame* frame_old, stats* stat, int framesize, bool output)
         {
+            bool reset = false;
+            ++pagedout_counter;
+            // cout << "counter: " << pagedout_counter << endl;
+            if (pagedout_counter%10==0)
+            {
+                reset = true;
+            }
             frame* frame_to_replace = new frame(-1);
             // go through the whole frametable
             vector <int>* curr_class;
 
-            for (int i=0; i<frametable.size(); i++)
+            //for (int i=0; i<frametable.size(); i++)
+            for (int i=0; i<pagetable.size(); i++)
             {
-                pte *curr_pte = frametable[i].pte_ptr;
-                if (curr_pte->REFERENCED == 0 && curr_pte->MODIFIED == 0)
+                pte *curr_pte = &pagetable[i];
+                //pte *curr_pte = frametable[i].pte_ptr;
+                if (curr_pte->PRESENT != 0)
                 {
-                    class_0.push_back(i);
-                }
-                else if (curr_pte->REFERENCED == 0 && curr_pte->MODIFIED != 0)
-                {
-                    class_1.push_back(i);
-                }
-                else if (curr_pte->REFERENCED != 0 && curr_pte->MODIFIED == 0)
-                {
-                    class_2.push_back(i);
-                }
-                else if (curr_pte->REFERENCED != 0 && curr_pte->MODIFIED != 0)
-                {
-                    class_3.push_back(i);
+                    if (curr_pte->REFERENCED == 0 && curr_pte->MODIFIED == 0)
+                    {
+                        class_0.push_back(curr_pte->frame_index);
+                    }
+                    else if (curr_pte->REFERENCED == 0 && curr_pte->MODIFIED != 0)
+                    {
+                        class_1.push_back(curr_pte->frame_index);
+                    }
+                    else if (curr_pte->REFERENCED != 0 && curr_pte->MODIFIED == 0)
+                    {
+                        class_2.push_back(curr_pte->frame_index);
+                    }
+                    else if (curr_pte->REFERENCED != 0 && curr_pte->MODIFIED != 0)
+                    {
+                        class_3.push_back(curr_pte->frame_index);
+                    }
+                    if (reset)
+                    {
+                        curr_pte->REFERENCED = 0;
+                    }
                 }
             }
 
@@ -222,6 +239,13 @@ class NRU : public Pager{
                 //cout << curr_class->size() << endl;
                 if (curr_class->size() > 0 )
                 {
+                    // cout << "frames in curr_class: " << endl;
+                    // for (int i=0; i < curr_class->size(); i++)
+                    // {
+                    //     cout << frametable[(*curr_class)[i]].pte_ptr->idx << ":" << (*curr_class)[i] << " ";
+                    // }
+                    // cout << endl;
+
                     int index = myrandom(curr_class->size());
                     int frame_index = (*curr_class)[index];
                     frame_to_replace = &frametable[frame_index];
@@ -345,7 +369,24 @@ class CLOCK_VIRTUAL: public Pager{
         }
 };
 
+class AGE_PHYS: public Pager{
+    public:
+        frame* allocate_frame(frame* frame_old, stats* stat, bool output)
+        {
 
+            frame* frame_to_replace;
+            return frame_to_replace;
+        }
+};
+
+class AGE_VIRTUAL: public Pager{
+    public:
+        frame* allocate_frame(frame* frame_old, stats* stat, bool output)
+        {
+            frame* frame_to_replace;
+            return frame_to_replace;
+        }
+};
 void test_free_list()
 {
     int i = 0;
@@ -498,6 +539,16 @@ frame* get_frame(frame* old_frame, stats* stat, string alg, int framesize, bool 
         {
             CLOCK_VIRTUAL clk_vir_alg = CLOCK_VIRTUAL();
             _frame = clk_vir_alg.allocate_frame(old_frame, stat, output);
+        }
+        else if (alg == "a")
+        {
+            AGE_PHYS age_phys_alg = AGE_PHYS();
+            _frame = age_phys_alg.allocate_frame(old_frame, stat, output);
+        }
+        else if (alg == "Y")
+        {
+            AGE_VIRTUAL age_virtual_alg = AGE_VIRTUAL();
+            _frame = age_virtual_alg.allocate_frame(old_frame, stat, output);
         }
     }
     else
