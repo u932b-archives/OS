@@ -1,6 +1,5 @@
 # include <iostream>
 # include <fstream>
-// # include <ctype.h>
 # include <unistd.h>
 # include <vector>
 # include <sstream>
@@ -23,7 +22,6 @@ struct pte
     int PAGEDOUT:1;
     int idx:8;
     int frame_index:8;
-    // vector <bool> age_bit_vector;
     bitset<32> age_bit_vector;
 };
 
@@ -51,7 +49,6 @@ frame::frame(int idx)
 {
     page_index = idx;
     pte_ptr = 0;
-    //pte_ptr = nullptr;
 }
 
 
@@ -117,17 +114,8 @@ void ZERO(frame* curr_frame, stats* stat, bool output)
     }
     stat->zeros++;
     if (curr_pte != NULL)
-    // if (curr_pte != NULL || curr_pte != nullptr)
     {
-        // curr_pte->PRESENT = 0;
-        // curr_pte->PAGEDOUT = 0;
-        // cout << "yo man" << endl;
         curr_frame->pte_ptr = 0;
-        //curr_frame->pte_ptr = nullptr;
-    }
-    else
-    {
-        // cout << "Already nullptr, peace." << endl;
     }
     stat->totalcost = stat->totalcost + 150;
 }
@@ -161,7 +149,6 @@ int myrandom(int framesize)
 {
     ofs = ofs % randvals.size();
     int to_return = (randvals[ofs] % framesize);
-    // cout << to_return << endl;
     ofs++;
     return to_return;
 }
@@ -172,15 +159,11 @@ class RANDOM : public Pager{
         {
             frame* frame_to_replace = new frame(-1);
             while (frame_to_replace->pte_ptr == NULL )
-            // while (frame_to_replace->pte_ptr == nullptr||frame_to_replace->pte_ptr == NULL )
             {
                 int index = myrandom(framesize);
-                // cout << index << endl;
                 frame_to_replace = &frametable[index];
-                // cout << frame_to_replace->pte_ptr->idx << endl;
             }
             frame_to_replace->pte_ptr->PRESENT = 0;
-            // fifo_queue.erase (fifo_queue.begin());
             UNMAP(frame_to_replace, stat, output);
             if (frame_to_replace->pte_ptr->MODIFIED != 0)
             {
@@ -197,25 +180,20 @@ class NRU : public Pager{
         vector <int> class_2;
         vector <int> class_3;
         vector <vector<int>*> nru_table;
-        // vector <vector<int>*> nru_table = {&class_0, &class_1, &class_2, &class_3};
         frame* allocate_frame(frame* frame_old, stats* stat, int framesize, bool output)
         {
             bool reset = false;
             ++pagedout_counter;
-            // cout << "counter: " << pagedout_counter << endl;
             if (pagedout_counter%10==0)
             {
                 reset = true;
             }
             frame* frame_to_replace = new frame(-1);
-            // go through the whole frametable
             vector <int>* curr_class;
 
-            //for (int i=0; i<frametable.size(); i++)
             for (int i=0; i<pagetable.size(); i++)
             {
                 pte *curr_pte = &pagetable[i];
-                //pte *curr_pte = frametable[i].pte_ptr;
                 if (curr_pte->PRESENT != 0)
                 {
                     if (curr_pte->REFERENCED == 0 && curr_pte->MODIFIED == 0)
@@ -243,7 +221,6 @@ class NRU : public Pager{
 
             int class_counter = 0;
             while (class_counter<4 && frame_to_replace->pte_ptr == 0)
-            // while (class_counter<4 && frame_to_replace->pte_ptr == nullptr)
             {
                 curr_class = nru_table[class_counter];
                 //cout << curr_class->size() << endl;
@@ -280,19 +257,14 @@ class SC : public Pager{
     public:
         frame* allocate_frame(frame* frame_old, stats* stat, bool output)
         {
-            // int curr_frame_idx = fifo_queue.front();
             frame* frame_to_replace = &frametable[fifo_queue.front()];
-            // fifo_queue.push_back(curr_frame_idx);
-            // fifo_queue.erase (fifo_queue.begin());
             while (frame_to_replace->pte_ptr->REFERENCED!=0)
             {
                 int curr_frame_idx = fifo_queue.front();
                 frame_to_replace->pte_ptr->REFERENCED=0;
                 fifo_queue.erase (fifo_queue.begin());
                 fifo_queue.push_back(curr_frame_idx);
-                // fifo_queue.push_back(frame_to_replace->pte_ptr->idx);
                 frame_to_replace = &frametable[fifo_queue.front()];
-                // fifo_queue.erase (fifo_queue.begin());
             }
             // Risky fix
             fifo_queue.erase (fifo_queue.begin());
@@ -331,6 +303,52 @@ class CLOCK_PHYS: public Pager{
                 OUT(frame_to_replace, stat, output);
             }
             return frame_to_replace;
+
+
+            // frame* frame_to_replace;
+            /*
+            frame* frame_to_replace = &frametable[hand];
+            pte* curr_pte;
+            while (true)
+            {
+                // cout << "hand: " << hand << endl;
+                // cout << frame_to_replace->page_index << endl;
+                curr_pte = frame_to_replace->pte_ptr;
+                if (curr_pte->PRESENT == 0)
+                {
+                    // hand++;
+                    hand = (++hand) % frametable.size();
+                }
+                else if (curr_pte->REFERENCED != 0 )
+                {
+                    curr_pte->REFERENCED = 0;
+                    hand = (++hand) % frametable.size();
+                }
+                else
+                {
+                    // cout << "found pte:" << curr_pte->idx << endl;
+                    // cout << "PRESENT:" << curr_pte->PRESENT << endl;
+                    // cout << "REFERENCED:" << curr_pte->REFERENCED << endl;
+                    // cout << "pointing to frame:" << curr_pte->frame_index << endl; // this is wrong
+                    frame_to_replace = &frametable[curr_pte->frame_index];
+                    // cout << "frame_to_replace's pte_ptr:" << frame_to_replace->pte_ptr->idx << endl;
+                    break;
+                }
+
+            }
+            // found frame, point to next
+            hand = (hand + 1) % frametable.size();
+
+            // cout << "frame_to_replace->pte_ptr: " << frame_to_replace->pte_ptr -> idx<< endl;
+            frame_to_replace->pte_ptr->PRESENT = 0;
+            UNMAP(frame_to_replace, stat, output);
+            if (frame_to_replace->pte_ptr->MODIFIED != 0)
+            {
+                OUT(frame_to_replace, stat, output);
+            }
+            return frame_to_replace;
+            */
+
         }
 };
 
@@ -397,14 +415,12 @@ class AGE_PHYS: public Pager{
                         curr_pte->age_bit_vector.flip(31);
                         curr_pte->REFERENCED=0;
                     }
-                    // cout << curr_pte->idx << ":" << curr_pte->age_bit_vector << endl;
                 }
             }
             frame* frame_to_replace = &frametable[0];
             bitset<32> tmp(std::string("11111111111111111111111111111111"));
 
             pte initial_pte = {0, 0, 0, 0, -1, 0, tmp};
-            //pte* smallest_pte = frametable[0].pte_ptr;
             pte* smallest_pte = &initial_pte;
 
 
@@ -425,38 +441,6 @@ class AGE_PHYS: public Pager{
 
     		 	}
             }
-            /*
-            for (int i=0; i<pagetable.size();i++)
-            {
-                pte *curr_pte = &pagetable[i];
-                if (curr_pte->PRESENT != 0)
-                {
-                    // cout << i << endl;
-                    bool break_flag = false;
-                    for (int j = 32-1; j >= 0; j--)
-                    {
-                        if (!break_flag){
-        	 		    if (smallest_pte->age_bit_vector[j] && !pagetable[i].age_bit_vector[j])
-			 		    {
-                            // cout << "replacing smallest:" << smallest_pte->idx << " with " << pagetable[i].idx << endl;
-                             smallest_pte = &pagetable[i];
-                             frame_to_replace = &frametable[pagetable[i].frame_index];
-                             // continue;
-                             // break;
-                             break_flag = true;
-                         }
-
-        	 		    else if (!smallest_pte->age_bit_vector[j] && pagetable[i].age_bit_vector[j])
-			 		    {
-                             // continue;
-                             //break;
-                             break_flag = true;
-                        }
-                        }
-                    }
-                }
-            }
-            */
             // cout << "min_pte = " << smallest_pte->idx << " age=" << smallest_pte->age_bit_vector << endl;
             frame_to_replace->pte_ptr->PRESENT = 0;
             frame_to_replace->pte_ptr->age_bit_vector = 0;
@@ -478,7 +462,6 @@ class AGE_VIRTUAL: public Pager{
                 pte *curr_pte = &pagetable[i];
                 //pte *curr_pte = frametable[i].pte_ptr;
                 if (curr_pte->PRESENT != 0)
-                //if (curr_pte->REFERENCED != 0 && curr_pte->PRESENT != 0)
                 {
                     curr_pte->age_bit_vector = curr_pte->age_bit_vector >> 1;
                     if (curr_pte->REFERENCED != 0)
@@ -495,50 +478,27 @@ class AGE_VIRTUAL: public Pager{
             pte initial_pte = {0, 0, 0, 0, -1, 0, tmp};
             //pte* smallest_pte = frametable[0].pte_ptr;
             pte* smallest_pte = &initial_pte;
-            /*
-            for (int i=0; i<frametable.size(); i++)
-                for (int j = 32-1; j >= 0; j--) {
-        	 		if (smallest_pte->age_bit_vector[j] && !frametable[i].pte_ptr->age_bit_vector[j])
-			 		{
-                         smallest_pte = frametable[i].pte_ptr;
-                         frame_to_replace = &frametable[i];
-                         break;
-                     }
-
-        	 		else if (!smallest_pte->age_bit_vector[i] && frametable[i].pte_ptr->age_bit_vector[j])
-			 		{
-                         break;
-			 		}
-
-    		 	}
-            }*/
 
             for (int i=0; i<pagetable.size();i++)
             {
                 pte *curr_pte = &pagetable[i];
                 if (curr_pte->PRESENT != 0)
                 {
-                    // cout << i << endl;
-                    bool break_flag = false;
                     for (int j = 32-1; j >= 0; j--)
                     {
-                        if (!break_flag){
         	 		    if (smallest_pte->age_bit_vector[j] && !pagetable[i].age_bit_vector[j])
 			 		    {
                             // cout << "replacing smallest:" << smallest_pte->idx << " with " << pagetable[i].idx << endl;
                              smallest_pte = &pagetable[i];
                              frame_to_replace = &frametable[pagetable[i].frame_index];
                              // continue;
-                             // break;
-                             break_flag = true;
+                             break;
                          }
 
         	 		    else if (!smallest_pte->age_bit_vector[j] && pagetable[i].age_bit_vector[j])
 			 		    {
                              // continue;
-                             //break;
-                             break_flag = true;
-                        }
+                             break;
                         }
                     }
                 }
@@ -651,8 +611,6 @@ void print_frametable(string alg, bool debug)
 
 void print_sum(stats stat)
 {
-    // int64_t totalcost2 = 400*(stat.unmaps+stat.maps) + 3000*(stat.ins+stat.outs) + 150*stat.zeros + inst_count;
-    // long long totalcost = 400*(stat.unmaps+stat.maps) + 3000*(stat.ins+stat.outs) + 150*stat.zeros + inst_count;
     printf("SUM %d U=%d M=%d I=%d O=%d Z=%d ===> %llu\n",
     inst_count, stat.unmaps, stat.maps, stat.ins, stat.outs, stat.zeros, stat.totalcost);
 }
@@ -663,7 +621,6 @@ frame* allocate_from_free_list()
     if (freelist.empty())
     {
         return 0;
-        // return nullptr;
     }
     frame* frame_to_return = freelist.front();
     freelist.erase (freelist.begin());
@@ -676,7 +633,6 @@ frame* get_frame(frame* old_frame, stats* stat, string alg, int framesize, bool 
     frame* _frame = allocate_from_free_list();
 
     if (_frame == 0)
-    // if (_frame == nullptr)
     {
         // no free frames, got to get old frames
         if (alg == "f")
@@ -724,7 +680,6 @@ frame* get_frame(frame* old_frame, stats* stat, string alg, int framesize, bool 
     }
     else
     {
-        // old_frame = nullptr;
         old_frame = 0;
     }
 
@@ -760,8 +715,6 @@ int main(int argc, char *argv[])
                 alg = optarg;
                 break;
             case 'o':
-                // {
-                // string str(optarg);
                 tmp = optarg;
                 if (tmp.find("O", 0, 1)!= string::npos)
                 {
@@ -789,7 +742,6 @@ int main(int argc, char *argv[])
                 }
 
                 break;
-                //}
             case 'f':
                 framesize = atoi(optarg);
                 break;
@@ -823,8 +775,6 @@ int main(int argc, char *argv[])
     for (int i=0; i<framesize; i++)
     {
         frame a_frame = frame(i);
-        // a_frame.page_index = i;
-        // a_frame.pte_ptr = nullptr;
         frametable.push_back(a_frame);
     }
 
@@ -838,16 +788,6 @@ int main(int argc, char *argv[])
         pte initial_pte = {0, 0, 0, 0, i};
         pagetable.push_back(initial_pte);
     }
-
-    // initiate NRU class
-    /*
-    if (alg=="N")
-    {
-        for (int i=0; i<64; i++)
-        {
-            class_0.push_back(pagetable[i]);
-        }
-    }*/
 
     stats stat = {0,0,0,0,0};
 
@@ -907,8 +847,6 @@ int main(int argc, char *argv[])
                 {
                     print_pagetable();
                 }
-                // TODO
-                //if (frametable_flag && debug_print_flag)
                 if (debug_frametable_flag)
                 {
                     print_frametable(alg, debug_frametable_flag);
