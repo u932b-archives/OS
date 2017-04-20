@@ -22,13 +22,16 @@ struct pte
     int frame_index:8;
 };
 
-struct stats
+class stats
 {
-    int unmaps;
-    int maps;
-    int ins;
-    int outs;
-    int zeros;
+    public:
+        int unmaps;
+        int maps;
+        int ins;
+        int outs;
+        int zeros;
+        long long totalcost;
+
 };
 
 class frame
@@ -58,6 +61,7 @@ void UNMAP(frame* frame_to_replace, stats* stat, bool output)
         cout << inst_count << ": UNMAP" << setw(4) << setfill(' ') << frame_to_replace->pte_ptr->idx << setw(4) << setfill(' ') << frame_to_replace->page_index << endl;
     }
     stat->unmaps++;
+    stat->totalcost = stat->totalcost + 400;
 }
 
 void OUT(frame* frame_to_replace, stats* stat, bool output)
@@ -69,6 +73,7 @@ void OUT(frame* frame_to_replace, stats* stat, bool output)
     frame_to_replace->pte_ptr->PAGEDOUT = 1;
     frame_to_replace->pte_ptr->MODIFIED = 0;
     stat->outs++;
+    stat->totalcost = stat->totalcost + 3000;
 }
 
 void IN(pte *curr_pte, frame* curr_frame, stats* stat, bool output)
@@ -78,6 +83,7 @@ void IN(pte *curr_pte, frame* curr_frame, stats* stat, bool output)
         cout << inst_count << ": IN" << setw(7) << setfill(' ') << curr_pte->idx << setw(4) << setfill(' ') << curr_frame->page_index << endl;
     }
     stat->ins++;
+    stat->totalcost = stat->totalcost + 3000;
 }
 
 void MAP(pte *curr_pte, frame* curr_frame, stats* stat, bool output)
@@ -92,6 +98,7 @@ void MAP(pte *curr_pte, frame* curr_frame, stats* stat, bool output)
     curr_frame->pte_ptr = curr_pte;
     curr_pte->frame_index = curr_frame->page_index;
     fifo_queue.push_back(curr_frame->page_index);
+    stat->totalcost = stat->totalcost + 400;
 }
 
 void ZERO(frame* curr_frame, stats* stat, bool output)
@@ -114,6 +121,7 @@ void ZERO(frame* curr_frame, stats* stat, bool output)
     {
         // cout << "Already nullptr, peace." << endl;
     }
+    stat->totalcost = stat->totalcost + 150;
 }
 
 
@@ -185,6 +193,7 @@ class NRU : public Pager{
             frame* frame_to_replace = new frame(-1);
             // go through the whole frametable
             vector <int>* curr_class;
+
             for (int i=0; i<frametable.size(); i++)
             {
                 pte *curr_pte = frametable[i].pte_ptr;
@@ -205,6 +214,7 @@ class NRU : public Pager{
                     class_3.push_back(i);
                 }
             }
+
             int class_counter = 0;
             while (class_counter<4 && frame_to_replace->pte_ptr == nullptr)
             {
@@ -433,10 +443,10 @@ void print_frametable(string alg, bool debug)
 
 void print_sum(stats stat)
 {
-    // cout << endl;
-    long long totalcost = 400*(stat.unmaps+stat.maps) + 3000*(stat.ins+stat.outs) + 150*stat.zeros+inst_count;
+    // int64_t totalcost2 = 400*(stat.unmaps+stat.maps) + 3000*(stat.ins+stat.outs) + 150*stat.zeros + inst_count;
+    // long long totalcost = 400*(stat.unmaps+stat.maps) + 3000*(stat.ins+stat.outs) + 150*stat.zeros + inst_count;
     printf("SUM %d U=%d M=%d I=%d O=%d Z=%d ===> %llu\n",
-    inst_count, stat.unmaps, stat.maps, stat.ins, stat.outs, stat.zeros, totalcost);
+    inst_count, stat.unmaps, stat.maps, stat.ins, stat.outs, stat.zeros, stat.totalcost);
 }
 
 
@@ -643,6 +653,7 @@ int main(int argc, char *argv[])
             }
             if (break_flag == false){
                 // test_free_list();
+                stat.totalcost++;
                 if (ordinary_flag)
                 {
                     cout << "==> inst: " << tokens[0] << " " << tokens[1] << endl;
