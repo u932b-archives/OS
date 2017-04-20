@@ -196,7 +196,8 @@ class NRU : public Pager{
         vector <int> class_1;
         vector <int> class_2;
         vector <int> class_3;
-        vector <vector<int>*> nru_table = {&class_0, &class_1, &class_2, &class_3};
+        vector <vector<int>*> nru_table;
+        // vector <vector<int>*> nru_table = {&class_0, &class_1, &class_2, &class_3};
         frame* allocate_frame(frame* frame_old, stats* stat, int framesize, bool output)
         {
             bool reset = false;
@@ -696,6 +697,8 @@ frame* get_frame(frame* old_frame, stats* stat, string alg, int framesize, bool 
         else if (alg == "N")
         {
             NRU nru_alg = NRU();
+            nru_alg.nru_table = {&nru_alg.class_0, &nru_alg.class_1, &nru_alg.class_2, &nru_alg.class_3};
+
             _frame = nru_alg.allocate_frame(old_frame, stat, framesize, output);
         }
         else if (alg == "c")
