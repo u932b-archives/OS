@@ -122,7 +122,8 @@ void ZERO(frame* curr_frame, stats* stat, bool output)
         // curr_pte->PRESENT = 0;
         // curr_pte->PAGEDOUT = 0;
         // cout << "yo man" << endl;
-        curr_frame->pte_ptr = nullptr;
+        curr_frame->pte_ptr = 0;
+        //curr_frame->pte_ptr = nullptr;
     }
     else
     {
@@ -720,7 +721,8 @@ frame* get_frame(frame* old_frame, stats* stat, string alg, int framesize, bool 
     }
     else
     {
-        old_frame = nullptr;
+        // old_frame = nullptr;
+        old_frame = 0;
     }
 
     return _frame;
