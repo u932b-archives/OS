@@ -589,46 +589,94 @@ int main(int argc, char *argv[])
     int curr_track = 0;
     while (!event_queue.empty())
     {
+        bool did_sth = false;
+        bool go_right = false;
         if (event_queue[0].time == curr_time)
         {
-            //do something
+            did_sth = true;
             cout << curr_time << " " << event_queue[0].index << " add " <<
                 event_queue[0].track_nmbr << endl;
 
             event_queue[0].start_time = curr_time;
 
-            if (!io_in_process)
+            if (to_issue.empty())
             {
-                if (to_issue.empty())
+                if (!io_in_process)
                 {
                     cout << curr_time << " " << event_queue[0].index << " issue " <<
                     event_queue[0].track_nmbr << " " << curr_track << endl;
+                    if (event_queue[0].track_nmbr < curr_track)
+                    {
+                        go_right = false;
+                    }
+                    else
+                    {
+                        go_right = true;
+                    }
                     io_in_process = true;
                     to_issue.push_back(event_queue[0]);
                 }
-                else
-                {
-                    to_issue.push_back(event_queue[0]);
-                }
+            }
+            else
+            {
+                to_issue.push_back(event_queue[0]);
             }
             event_queue.erase(event_queue.begin());
         }
-        // else if (!to_issue.empty())
-        // {
+
+        if (!to_issue.empty())
+        {
             if (to_issue[0].track_nmbr == curr_time - to_issue[0].start_time)
             {
+                did_sth = true;
                 cout << curr_time << " " << to_issue[0].index << " finish " <<
                         to_issue[0].track_nmbr << endl;
                 to_issue.erase(to_issue.begin());
                 io_in_process = false;
             }
-        // }
-        if (!io_in_process)
-        {
-
+            else if (!io_in_process)
+            {
+                did_sth = true;
+                cout << curr_time << " " << to_issue[0].index << " issue " <<
+                to_issue[0].track_nmbr << " " << curr_track << endl;
+                io_in_process = true;
+                if (event_queue[0].track_nmbr < curr_track)
+                {
+                    go_right = false;
+                }
+                else
+                {
+                    go_right = true;
+                }
+            }
         }
         else
         {
+            did_sth = true;
+            cout << curr_time << " " << event_queue[0].index << " issue " <<
+            event_queue[0].track_nmbr << " " << curr_track << endl;
+            io_in_process = true;
+            to_issue.push_back(event_queue[0]);
+            if (event_queue[0].track_nmbr < curr_track)
+            {
+                go_right = false;
+            }
+            else
+            {
+                go_right = true;
+            }
+        }
+
+        if (!did_sth)
+        {
+            if (go_right)
+            {
+                curr_track++;
+            }
+            else
+            {
+                curr_track--;
+            }
             curr_time++;
         }
     }
