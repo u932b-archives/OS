@@ -8,39 +8,17 @@
 
 using namespace std;
 
-struct pte
-{
-    int PRESENT:1;
-    int MODIFIED:1;
-    int REFERENCED:1;
-    int PAGEDOUT:1;
-    int idx:8;
-    int frame_index:8;
-    bitset<32> age_bit_vector;
-};
-
-
 class io_op
 {
     public:
         int index;
         int time;
         int track_nmbr;
+        int added_time;
         int start_time;
         int end_time;
         bool io_processing= false;
         io_op(int, int, int);
-};
-
-class STAT
-{
-    public:
-        int total_time;
-        int tot_movement;
-        float avg_turnaround;
-        float avg_waittime;
-        int max_waittime;
-        STAT(int, int, float, float, int);
 };
 
 io_op::io_op(int idx, int t, int track_n)
@@ -59,27 +37,36 @@ class FIFO : public base_class{
     public:
 };
 
-STAT stats = {0,0,0,0,0};
 vector<io_op*> to_add;
-vector<io_op> to_issue;
+vector<io_op*> to_issue;
 int curr_time = 1;
+int muvement = 0;
 bool io_in_process = false;
 int curr_track = 0;
 bool go_right = false;
+bool verbose = true;
 
 void ADD()
 {
-    cout << curr_time << ":" << setw(5) << event_queue[0].index << " add " <<
-        event_queue[0].track_nmbr << endl;
-    event_queue[0].start_time = curr_time;
-    to_issue.push_back(event_queue[0]);
-    event_queue.erase(event_queue.begin());
+    if (verbose)
+    {
+        cout << curr_time << ":" << setw(6) << to_add[0]->index << " add " <<
+            to_add[0]->track_nmbr << endl;
+    }
+    to_add[0]->added_time = curr_time;
+    to_issue.push_back(to_add[0]);
+    to_add.erase(to_add.begin());
 }
+
 void ISSUE()
 {
-    cout << curr_time << ":" << setw(5) << to_issue[0].index << " issue " <<
-    to_issue[0].track_nmbr << " " << curr_track << endl;
-    if (to_issue[0].track_nmbr > curr_track)
+    if (verbose)
+    {
+        cout << curr_time << ":" << setw(6) << to_issue[0]->index << " issue " <<
+        to_issue[0]->track_nmbr << " " << curr_track << endl;
+    }
+    to_issue[0]->start_time = curr_time;
+    if (to_issue[0]->track_nmbr > curr_track)
     {
         go_right = true;
     }
@@ -91,22 +78,49 @@ void ISSUE()
 }
 void FINISH()
 {
-    cout << curr_time << ":" << setw(5) << to_issue[0].index << " finish " <<
-            curr_time - to_issue[0].start_time << endl;
+    if (verbose)
+    {
+        cout << curr_time << ":" << setw(6) << to_issue[0]->index << " finish " <<
+            curr_time - to_issue[0]->added_time << endl;
+    }
+    to_issue[0]->end_time = curr_time;
     to_issue.erase(to_issue.begin());
     io_in_process = false;
 }
 
-void PRINTSUM(int total_time, int tot_movement, float avg_turnaround, float avg_waittime, int max_waittime)
+void PRINTSUM(int total_time, int tot_movement)
 {
+    int tot_turnaround = 0;
+    int tot_waittime = 0;
+    int max_waittime=0;
+
+    for (int i=0; i< event_queue.size(); i++)
+    {
+        io_op event = event_queue[i];
+        tot_turnaround += event.end_time - event.added_time;
+        int event_wt = event.start_time - event.added_time;
+        tot_waittime += event_wt;
+        if (event_wt > max_waittime)
+        {
+            max_waittime = event_wt;
+        }
+    }
+
+    float avg_turnaround=tot_turnaround/static_cast<float>(event_queue.size());
+    float avg_waittime = tot_waittime/static_cast<float>(event_queue.size());
+
     printf("SUM: %d %d %.2lf %.2lf %d\n", total_time,
     tot_movement, avg_turnaround, avg_waittime, max_waittime);
-
 }
 
 void IOREQS()
 {
-
+    cout << "IOREQS INFO" << endl;
+    for (int i=0; i<event_queue.size(); i++)
+    {
+        io_op event = event_queue[i];
+        cout << setw(5) << event.index << ":" << setw(6) << event.time << setw(6) << event.start_time << setw(6) << event.end_time << endl;
+    }
 }
 
 int main(int argc, char *argv[])
@@ -121,13 +135,15 @@ int main(int argc, char *argv[])
     string alg;
     string tmp;
 
-    while ((c = getopt (argc, argv, "s:")) != -1)
+    while ((c = getopt (argc, argv, "s:v:")) != -1)
     {
         switch (c)
         {
             case 's':
                 alg = optarg;
                 break;
+            case 'v':
+                verbose = true;
             default:
                 abort ();
         }
@@ -175,40 +191,51 @@ int main(int argc, char *argv[])
         to_add.push_back(&event_queue[i]);
     }
 
-    cout << "TRACE" << endl;
-    while (!event_queue.empty())
+    if (verbose)
+    {
+        cout << "TRACE" << endl;
+    }
+
+    while (!to_add.empty())
     {
         bool did_sth = false;
-        if (event_queue[0].time == curr_time)
+        if (to_add[0]->time == curr_time)
         {
             did_sth = true;
             ADD();
         }
-
-        if (!io_in_process)
+        if  (!to_issue.empty())
         {
-            did_sth = true;
-            ISSUE();
-        }
-        else
-        {
-            // check if current io can be finished
-            if (to_issue[0].track_nmbr == curr_track)
+            if (!io_in_process)
             {
                 did_sth = true;
-                FINISH();
+                ISSUE();
+            }
+            else
+            {
+                // check if current io can be finished
+                if (to_issue[0]->track_nmbr == curr_track)
+                {
+                    did_sth = true;
+                    FINISH();
+                }
             }
         }
 
         if (!did_sth)
         {
-            if (go_right==true)
+            if (io_in_process)
+            // only move cursor if something in process
             {
-                curr_track++;
-            }
-            else
-            {
-                curr_track--;
+                if (go_right==true)
+                {
+                    curr_track++;
+                }
+                else
+                {
+                    curr_track--;
+                }
+                muvement++;
             }
             curr_time++;
         }
@@ -224,7 +251,7 @@ int main(int argc, char *argv[])
         else
         {
             // check if current io can be finished
-            if (to_issue[0].track_nmbr == curr_track)
+            if (to_issue[0]->track_nmbr == curr_track)
             {
                 did_sth = true;
                 FINISH();
@@ -233,32 +260,28 @@ int main(int argc, char *argv[])
 
         if (!did_sth)
         {
-            if (go_right==true)
+            if (io_in_process)
+            // only move cursor if something in process
             {
-                curr_track++;
-            }
-            else
-            {
-                curr_track--;
+                if (go_right==true)
+                {
+                    curr_track++;
+                }
+                else
+                {
+                    curr_track--;
+                }
+                muvement++;
             }
             curr_time++;
         }
     }
 
-    /*
-    if (print_flag)
+
+    if (verbose)
     {
-        print_pagetable();
+        IOREQS();
     }
-    if (frametable_flag)
-    {
-        debug_frametable_flag = false;
-        print_frametable(alg, debug_frametable_flag);
-    }
-    if (sum_flag)
-    {
-        print_sum(stat);
-    }
-    */
+    PRINTSUM(curr_time, muvement);
 	inFile.close();
 }
