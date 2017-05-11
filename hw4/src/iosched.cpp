@@ -39,17 +39,33 @@ bool io_in_process = false;
 int curr_track = 0;
 bool go_right = false;
 bool verbose = true;
+string numio;
+string maxtracks;
+string lambda;
+int issuing_index = 0;
 
-// class Scheduler {
-//     public:
-//         virtual void ADD();
-// };
+class Scheduler {
+    public:
+        virtual void set_index(int i) {
+                 issuing_index = i;
+              }
+        int get_index() {
+                 return issuing_index;
+              }
+        virtual void ADD() = 0;
+        virtual void ISSUE() = 0;
+        virtual void FINISH() = 0;
+    // pirivate:
+        // int issuing_index = 0;
+};
 
-// class FIFO : public Scheduler{
-class FIFO {
+class FIFO : public Scheduler
+{
+//class FIFO {
     public:
         // vector<io_op*> to_add;
         // vector<io_op*> to_issue;
+        // int issuing_index = 0;
         void ADD()
         {
             if (verbose)
@@ -97,11 +113,12 @@ class FIFO {
 };
 
 
-class SCAN {
+class SCAN : public Scheduler
+{
     public:
         // vector<io_op*> to_add;
         // vector<io_op*> to_issue;
-        int issuing_index = -1;
+        // int issuing_index = -1;
 
         void ADD()
         {
@@ -184,12 +201,10 @@ class SCAN {
         }
 };
 
-class CSCAN {
+class CSCAN : public Scheduler
+{
     public:
-        // vector<io_op*> to_add;
-        // vector<io_op*> to_issue;
-        int issuing_index = -1;
-
+        // int issuing_index = -1;
         void ADD()
         {
             if (verbose)
@@ -205,26 +220,16 @@ class CSCAN {
         {
             int delta = INT_MAX;
             int index_to_issue = -1;
+            go_right = 1;
             while (index_to_issue == -1)
             {
                 for (int i =0; i< to_issue.size(); i++)
                 {
                     int curr_delta = to_issue[i]->track_nmbr - curr_track;
-                    if (go_right)
+                    if (curr_delta < 0)
                     {
-                        if (curr_delta < 0)
-                        {
-                            continue;
-                        }
+                        continue;
                     }
-                    else
-                    {
-                        if (curr_delta > 0)
-                        {
-                            continue;
-                        }
-                    }
-                    curr_delta = abs(curr_delta);
                     if (curr_delta < delta)
                     {
                         delta = curr_delta;
@@ -233,10 +238,11 @@ class CSCAN {
                 }
                 if (index_to_issue == -1)
                 {
-                    go_right = !go_right;
+                    curr_track = 0;
                 }
             }
             to_issue[index_to_issue]->start_time = curr_time;
+            /*
             if (to_issue[index_to_issue]->track_nmbr > curr_track)
             {
                 go_right = true;
@@ -249,6 +255,7 @@ class CSCAN {
             {
                 // go_right stay the same
             }
+            */
 
             if (verbose)
             {
@@ -271,7 +278,8 @@ class CSCAN {
         }
 };
 
-class SSTF {
+class SSTF : public Scheduler
+{
     public:
         /*
         void ADD()
@@ -300,7 +308,9 @@ class SSTF {
             to_add.erase(to_add.begin());
             // ato_add.erase (to_add.begin() + index_to_issue);
         }*/
-        int issuing_index = -1;
+        // int issuing_index = -1;
+        // Scheduler::set_index(-1);
+        // Scheduler.set_index(-1);
         void ADD()
         {
             if (verbose)
@@ -389,18 +399,19 @@ class SSTF {
 //     }
 //     io_in_process = true;
 // }
-// void FINISH()
-// {
-//     if (verbose)
-//     {
-//         cout << curr_time << ":" << setw(6) << to_issue[0]->index << " finish " <<
-//             curr_time - to_issue[0]->added_time << endl;
-//     }
-//     to_issue[0]->end_time = curr_time;
-//     to_issue.erase(to_issue.begin());
-//     io_in_process = false;
-// }
-
+/*
+void FINISH()
+{
+    if (verbose)
+    {
+        cout << curr_time << ":" << setw(6) << to_issue[0]->index << " finish " <<
+            curr_time - to_issue[0]->added_time << endl;
+    }
+    to_issue[0]->end_time = curr_time;
+    to_issue.erase(to_issue.begin());
+    io_in_process = false;
+}
+*/
 void PRINTSUM(int total_time, int tot_movement)
 {
     int tot_turnaround = 0;
@@ -464,10 +475,30 @@ int main(int argc, char *argv[])
 	ifstream inFile;
 	inFile.open(argv[optind]);
 	string line;
+    Scheduler* sched;
 
-    // FIFO sched = FIFO();
-    // SSTF sched = SSTF();
-    CSCAN sched = CSCAN();
+    if (alg == "i")
+    {
+        sched = new FIFO();
+    }
+    else if (alg == "j")
+    {
+        sched = new SSTF();
+    }
+    else if (alg == "s")
+    {
+        sched = new SCAN();
+    }
+    else if (alg == "c")
+    {
+        // CSCAN sched = CSCAN();
+        sched = new CSCAN();
+    }
+    else if (alg =="f")
+    {
+        //FSCAN sched = FSCAN();
+    }
+
     // sched = new FIFO();
 
     int curr_idx = 0;
@@ -475,17 +506,28 @@ int main(int argc, char *argv[])
     {
         getline(inFile, line);
         bool break_flag = false;
+        bool hash_second= false;
         if (!line.empty())
         {
 		    string buf; // Have a buffer string
     	    stringstream ss(line); // Insert the string into a stream
     	    vector<string> tokens; // Create vector to hold words
+            vector<string> hash_tokens;
     	    while (ss >> buf)
             {
                 if (break_flag == false)
                 {
                     if (buf[0] == '#')
                     {
+                        /*if (hash_second)
+                        {
+                            hash_tokens.push_back(buf);
+                        }
+                        else
+                        {
+                            break_flag = true;
+                            hash_second = !hash_second;
+                        }*/
                         break_flag = true;
                     }
                     else
@@ -494,6 +536,13 @@ int main(int argc, char *argv[])
                     }
                 }
             }
+            /*
+            if (hash_second == true)
+            {
+                numio = hash_tokens[0];
+                maxtracks = hash_tokens[1];
+                lambda = hash_tokens[2];
+            }*/
             if (break_flag == false)
             {
                 io_op curr_op = io_op(curr_idx, stoi(tokens[0]), stoi(tokens[1]));
@@ -516,28 +565,35 @@ int main(int argc, char *argv[])
     while (!to_add.empty())
     {
         bool did_sth = false;
+        // cout << "begin: did sth? " << did_sth << endl;
+        // cout << "curr_time: " << curr_time << endl;
+        // cout << to_add[0]->time << endl;
         if (to_add[0]->time == curr_time)
         {
             did_sth = true;
-            sched.ADD();
+            sched->ADD();
         }
         if  (!to_issue.empty())
         {
             if (!io_in_process)
             {
                 did_sth = true;
-                sched.ISSUE();
+                sched->ISSUE();
             }
             else
             {
                 // check if current io can be finished
-                if (to_issue[sched.issuing_index]->track_nmbr == curr_track)
+                // cout << sched->get_index() << endl;
+                // if (to_issue[sched->issuing_index]->track_nmbr == curr_track)
+                if (to_issue[sched->get_index()]->track_nmbr == curr_track)
                 {
                     did_sth = true;
-                    sched.FINISH();
+                    sched->FINISH();
                 }
             }
         }
+
+        // cout << "did sth? " << did_sth << endl;
 
         if (!did_sth)
         {
@@ -554,26 +610,32 @@ int main(int argc, char *argv[])
                 }
                 muvement++;
             }
+            // cout << "time:" << curr_time << endl;
             curr_time++;
         }
     }
+    // cout << "ISSUE_INDEX: " << sched->get_index() << endl;
+    // cout << "ISSUE_INDEX: " << sched->issuing_index << endl;
     while (!to_issue.empty())
     {
         bool did_sth = false;
         if (!io_in_process)
         {
             did_sth = true;
-            sched.ISSUE();
+            sched->ISSUE();
         }
         else
         {
             // check if current io can be finished
-            if (to_issue[sched.issuing_index]->track_nmbr == curr_track)
+            // cout << "ISSUE_INDEX: " << sched->get_index() << endl;
+            if (to_issue[sched->get_index()]->track_nmbr == curr_track)
+            // if (to_issue[sched->issuing_index]->track_nmbr == curr_track)
             {
                 did_sth = true;
-                sched.FINISH();
+                sched->FINISH();
             }
         }
+        // cout << "did sth? " << did_sth << endl;
 
         if (!did_sth)
         {
@@ -590,6 +652,8 @@ int main(int argc, char *argv[])
                 }
                 muvement++;
             }
+            // cout << "time:" << curr_time << endl;
+            // cout << "curr_track:" << curr_track << endl;
             curr_time++;
         }
     }
