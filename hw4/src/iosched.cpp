@@ -39,12 +39,13 @@ bool io_in_process = false;
 int curr_track = 0;
 bool go_right = false;
 bool verbose = true;
-string numio;
-string maxtracks;
+int numio;
+int maxtracks;
 string lambda;
 int issuing_index = 0;
 
-class Scheduler {
+class Scheduler
+{
     public:
         virtual void set_index(int i) {
                  issuing_index = i;
@@ -111,7 +112,6 @@ class FIFO : public Scheduler
             io_in_process = false;
         }
 };
-
 
 class SCAN : public Scheduler
 {
@@ -219,13 +219,23 @@ class CSCAN : public Scheduler
         void ISSUE()
         {
             int delta = INT_MAX;
+            int curr_delta = INT_MAX;
             int index_to_issue = -1;
-            go_right = 1;
+            go_right = true;
+            bool circular = false;
             while (index_to_issue == -1)
             {
-                for (int i =0; i< to_issue.size(); i++)
+                for (int i = 0; i< to_issue.size(); i++)
+                //for (int i =0; i< to_issue.size(); i++)
                 {
-                    int curr_delta = to_issue[i]->track_nmbr - curr_track;
+                    if (!circular)
+                    {
+                        curr_delta = to_issue[i]->track_nmbr - curr_track;
+                    }
+                    else
+                    {
+                        curr_delta = (to_issue[i]->track_nmbr + maxtracks - curr_track);
+                    }
                     if (curr_delta < 0)
                     {
                         continue;
@@ -238,8 +248,12 @@ class CSCAN : public Scheduler
                 }
                 if (index_to_issue == -1)
                 {
-                    curr_track = 0;
+                    circular = true;
                 }
+            }
+            if (circular)
+            {
+                go_right = !go_right;
             }
             to_issue[index_to_issue]->start_time = curr_time;
             /*
@@ -369,49 +383,168 @@ class SSTF : public Scheduler
         }
 
 };
-// void ADD()
-// {
-//     if (verbose)
-//     {
-//         cout << curr_time << ":" << setw(6) << to_add[0]->index << " add " <<
-//             to_add[0]->track_nmbr << endl;
-//     }
-//     to_add[0]->added_time = curr_time;
-//     to_issue.push_back(to_add[0]);
-//     to_add.erase(to_add.begin());
-// }
 
-// void ISSUE()
-// {
-//     if (verbose)
-//     {
-//         cout << curr_time << ":" << setw(6) << to_issue[0]->index << " issue " <<
-//         to_issue[0]->track_nmbr << " " << curr_track << endl;
-//     }
-//     to_issue[0]->start_time = curr_time;
-//     if (to_issue[0]->track_nmbr > curr_track)
-//     {
-//         go_right = true;
-//     }
-//     else
-//     {
-//         go_right = false;
-//     }
-//     io_in_process = true;
-// }
-/*
-void FINISH()
+class FSCAN: public Scheduler
 {
-    if (verbose)
+    vector<io_op*>* curr_to_issue;
+    vector<io_op*> to_issue1;
+    vector<io_op*> to_issue2;
+    bool queue_to_add = true;
+    bool queue_to_issue = true;
+    void ADD()
     {
-        cout << curr_time << ":" << setw(6) << to_issue[0]->index << " finish " <<
-            curr_time - to_issue[0]->added_time << endl;
+        // cout << "one's size:" << to_issue1.size() << endl;
+        if (verbose)
+        {
+            cout << curr_time << ":" << setw(6) << to_add[0]->index << " add " <<
+                to_add[0]->track_nmbr << endl;
+        }
+        to_add[0]->added_time = curr_time;
+        if (to_issue1.empty() && to_issue2.empty())
+        {
+            //reset
+            queue_to_add = true;
+            queue_to_issue = true;
+        }
+        if (queue_to_add)
+        {
+            curr_to_issue = &to_issue1;
+        }
+        else
+        {
+            curr_to_issue = &to_issue2;
+        }
+        curr_to_issue->push_back(to_add[0]);
+        if (!io_in_process)
+        {
+            to_issue = *curr_to_issue;
+        }
+        to_add.erase(to_add.begin());
     }
-    to_issue[0]->end_time = curr_time;
-    to_issue.erase(to_issue.begin());
-    io_in_process = false;
-}
-*/
+    void ISSUE()
+    {
+        int delta = INT_MAX;
+        int index_to_issue = -1;
+        // to_issue = *curr_to_issue;
+        if (queue_to_issue)
+        //if (queue_in_io_is_first)
+        {
+            // copy back
+            to_issue = to_issue1;
+        }
+        else
+        {
+            to_issue = to_issue2;
+        }
+        // cout << "one's size after issue:" << to_issue1.size() << endl;
+        while (index_to_issue == -1)
+        {
+            for (int i =0; i< to_issue.size(); i++)
+            {
+                int curr_delta = to_issue[i]->track_nmbr - curr_track;
+                if (go_right)
+                {
+                    if (curr_delta < 0)
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (curr_delta > 0)
+                    {
+                        continue;
+                    }
+                }
+                curr_delta = abs(curr_delta);
+                if (curr_delta < delta)
+                {
+                    delta = curr_delta;
+                    index_to_issue = i;
+                }
+            }
+            if (index_to_issue == -1)
+            {
+                go_right = !go_right;
+            }
+        }
+        to_issue[index_to_issue]->start_time = curr_time;
+        if (to_issue[index_to_issue]->track_nmbr > curr_track)
+        {
+            go_right = true;
+        }
+        else if (to_issue[index_to_issue]->track_nmbr < curr_track)
+        {
+            go_right = false;
+        }
+        else
+        {
+            // go_right stay the same
+        }
+
+        if (verbose)
+        {
+            cout << curr_time << ":" << setw(6) << to_issue[index_to_issue]->index << " issue " <<
+            to_issue[index_to_issue]->track_nmbr << " " << curr_track << endl;
+        }
+        if (queue_to_issue)
+        {
+            // copy back
+            to_issue1 = to_issue;
+        }
+        else
+        {
+            to_issue2 = to_issue;
+        }
+        issuing_index = index_to_issue;
+        io_in_process = true;
+        queue_to_add = !queue_to_issue;
+        // if (to_issue.size() == 0)
+        // {
+        //     queue_to_issue = !queue_to_issue;
+        // }
+    }
+
+    void FINISH()
+    {
+        if (queue_to_issue)
+        {
+            curr_to_issue = &to_issue1;
+            if (verbose)
+            {
+                cout << curr_time << ":" << setw(6) << to_issue1[issuing_index]->index << " finish " <<
+                    curr_time - to_issue1[issuing_index]->added_time << endl;
+            }
+            to_issue1[issuing_index]->end_time = curr_time;
+            to_issue1.erase(to_issue1.begin() + issuing_index);
+            // to_issue = to_issue1;
+            }
+        else
+        {
+            curr_to_issue = &to_issue2;
+            if (verbose)
+            {
+                cout << curr_time << ":" << setw(6) << to_issue2[issuing_index]->index << " finish " <<
+                    curr_time - to_issue2[issuing_index]->added_time << endl;
+            }
+            to_issue2[issuing_index]->end_time = curr_time;
+            to_issue2.erase(to_issue2.begin() + issuing_index);
+            // to_issue = to_issue2;
+        }
+        // first_queue = !first_queue;
+        if (curr_to_issue->size() == 0)
+        {
+            queue_to_issue = !queue_to_issue;
+            queue_to_add = !queue_to_issue;
+            go_right = true;
+        }
+        if (to_issue1.size() == 0 && to_issue2.size()==0)
+        {
+            to_issue = to_issue1;
+        }
+        io_in_process = false;
+    }
+};
 void PRINTSUM(int total_time, int tot_movement)
 {
     int tot_turnaround = 0;
@@ -445,6 +578,16 @@ void IOREQS()
         io_op event = event_queue[i];
         cout << setw(5) << event.index << ":" << setw(6) << event.time << setw(6) << event.start_time << setw(6) << event.end_time << endl;
     }
+}
+
+string get_data(string token)
+{
+    //cout << token << endl;
+    string delimiter = "=";
+    string real_token = token.substr(token.find(delimiter)+1, token.size()- token.find(delimiter));
+    //cout << real_token << endl;
+    return real_token;
+    //return stoi(real_token);
 }
 
 int main(int argc, char *argv[])
@@ -496,17 +639,17 @@ int main(int argc, char *argv[])
     }
     else if (alg =="f")
     {
+        sched = new FSCAN();
         //FSCAN sched = FSCAN();
     }
 
-    // sched = new FIFO();
-
     int curr_idx = 0;
+    bool hash_line = true;
+    int hash_line_count= 0;
     while (!inFile.eof())
     {
+        bool break_flag = true;
         getline(inFile, line);
-        bool break_flag = false;
-        bool hash_second= false;
         if (!line.empty())
         {
 		    string buf; // Have a buffer string
@@ -515,35 +658,46 @@ int main(int argc, char *argv[])
             vector<string> hash_tokens;
     	    while (ss >> buf)
             {
-                if (break_flag == false)
+                if (hash_line == true)
                 {
-                    if (buf[0] == '#')
+                    if (hash_line_count == 2)
                     {
-                        /*if (hash_second)
-                        {
-                            hash_tokens.push_back(buf);
-                        }
-                        else
-                        {
-                            break_flag = true;
-                            hash_second = !hash_second;
-                        }*/
-                        break_flag = true;
+                        tokens.push_back(buf);
+                    }
+                }
+                if (buf[0] == '#')
+                {
+                    hash_line = true;
+                    hash_line_count = (hash_line_count+1);
+                    if (hash_line_count == 2)
+                    {
+                        tokens.push_back(buf);
                     }
                     else
                     {
-            	        tokens.push_back(buf);
+                        // first line
+                        break;
                     }
+                    // break_flag = true;
+                }
+                else
+                {
+                    // break_flag = false;
+            	    tokens.push_back(buf);
                 }
             }
-            /*
-            if (hash_second == true)
+            if (hash_line_count == 2)
             {
-                numio = hash_tokens[0];
-                maxtracks = hash_tokens[1];
-                lambda = hash_tokens[2];
-            }*/
-            if (break_flag == false)
+                numio = stoi(get_data(tokens[0]));
+                maxtracks = stoi(get_data(tokens[1]));
+                // TODO lambda is wrong
+                lambda = get_data(tokens[2]);
+                // cout << "numio:" << numio << endl;
+                // cout << "maxtracks:" << maxtracks << endl;
+                // cout << "lambda:" << lambda << endl;
+                hash_line_count = -1;
+            }
+            else if (hash_line_count == -1)
             {
                 io_op curr_op = io_op(curr_idx, stoi(tokens[0]), stoi(tokens[1]));
                 curr_idx++;
@@ -584,6 +738,7 @@ int main(int argc, char *argv[])
             {
                 // check if current io can be finished
                 // cout << sched->get_index() << endl;
+                // cout << to_issue[sched->get_index()]->track_nmbr << endl;
                 // if (to_issue[sched->issuing_index]->track_nmbr == curr_track)
                 if (to_issue[sched->get_index()]->track_nmbr == curr_track)
                 {
@@ -602,10 +757,12 @@ int main(int argc, char *argv[])
             {
                 if (go_right==true)
                 {
+                    // curr_track = (curr_track+1)%maxtracks;
                     curr_track++;
                 }
                 else
                 {
+                    // curr_track = (curr_track-1)%maxtracks;
                     curr_track--;
                 }
                 muvement++;
@@ -615,7 +772,6 @@ int main(int argc, char *argv[])
         }
     }
     // cout << "ISSUE_INDEX: " << sched->get_index() << endl;
-    // cout << "ISSUE_INDEX: " << sched->issuing_index << endl;
     while (!to_issue.empty())
     {
         bool did_sth = false;
@@ -645,9 +801,11 @@ int main(int argc, char *argv[])
                 if (go_right==true)
                 {
                     curr_track++;
+                    // curr_track = (curr_track+1)%maxtracks;
                 }
                 else
                 {
+                    // curr_track = (curr_track-1)%maxtracks;
                     curr_track--;
                 }
                 muvement++;
@@ -656,7 +814,9 @@ int main(int argc, char *argv[])
             // cout << "curr_track:" << curr_track << endl;
             curr_time++;
         }
+        // cout << to_issue[0]->index << endl;
     }
+
 
 
     if (verbose)
