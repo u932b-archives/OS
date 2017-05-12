@@ -1,0 +1,4 @@
+gradeit.sh ../myout/ ./ .//LOG
+diff -b -q ../myout//out_8_j .//out_8_j failed
+   DIR1-SUM ==> SUM: 9040 9039 750.21 637.22 2183
+   DIR2-SUM ==> SUM: 9040 9039 750.21 637.23 2183
