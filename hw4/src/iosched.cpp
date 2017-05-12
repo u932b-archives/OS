@@ -19,7 +19,7 @@ class io_op
         int added_time;
         int start_time;
         int end_time;
-        bool io_processing= false;
+        bool io_processing;
         io_op(int, int, int);
 };
 
@@ -389,8 +389,8 @@ class FSCAN: public Scheduler
     vector<io_op*>* curr_to_issue;
     vector<io_op*> to_issue1;
     vector<io_op*> to_issue2;
-    bool queue_to_add = true;
-    bool queue_to_issue = true;
+    bool queue_to_add ;
+    bool queue_to_issue;
     void ADD()
     {
         // cout << "one's size:" << to_issue1.size() << endl;
@@ -563,8 +563,9 @@ void PRINTSUM(int total_time, int tot_movement)
         }
     }
 
-    float avg_turnaround=tot_turnaround/static_cast<float>(event_queue.size());
-    float avg_waittime = tot_waittime/static_cast<float>(event_queue.size());
+    float avg_turnaround= static_cast<float>(tot_turnaround)/static_cast<float>(event_queue.size());
+    //float avg_waittime = static_cast<float>(tot_waittime)/static_cast<float>(event_queue.size());
+    float avg_waittime = static_cast<float>(tot_waittime)/numio;
 
     printf("SUM: %d %d %.2lf %.2lf %d\n", total_time,
     tot_movement, avg_turnaround, avg_waittime, max_waittime);
